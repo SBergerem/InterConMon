@@ -65,12 +65,6 @@ The application should be able to run as a Docker container.
 
 The long-term goal is that someone can deploy it with Docker Compose without needing to manually install many dependencies on the host system.
 
-Example idea:
-
-```bash
-docker compose up -d
-```
-
 The exact Docker setup will be developed as part of the project.
 
 ---
