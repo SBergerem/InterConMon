@@ -38,6 +38,10 @@ The project should eventually be able to:
 * Run inside Docker
 * Be deployable with Docker Compose
 * Be understandable and maintainable as a small homelab tool
+*  Provide a local web interface for viewing status and changing settings
+* Support password-based login for the web interface
+* Use browser sessions/cookies so users do not have to log in every time
+* Require password setup or password change on first use
 
 ---
 
@@ -52,6 +56,7 @@ Important learning topics include:
 * Handling repeated checks over time
 * Logging and storing measured data
 * Structuring a small software project
+* Coding a website to configre settings
 * Running an application inside Docker
 * Using Docker Compose for deployment
 * Keeping configuration separate from source code
@@ -93,6 +98,8 @@ This tool is intended to run locally in a homelab environment.
 It should not require public internet access to the service itself.
 
 Configuration files and generated monitoring data may contain personal or network-related information and should be handled carefully.
+
+The web interface is intended for local homelab or VPN access only. It should not be exposed directly to the public internet without additional security considerations such as HTTPS, secure reverse proxy configuration, and proper authentication hardening.
 
 ---
 
