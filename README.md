@@ -8,6 +8,20 @@ This project is intentionally developed step by step as a learning project. The 
 
 ---
 
+## Disclaimer
+
+InterConMon is a personal learning and homelab project.
+
+This software is provided "as is", without warranty of any kind. The author does not guarantee that the software is secure, error-free, reliable, or suitable for any specific purpose.
+
+Use this software at your own risk. The author is not responsible for any damages, data loss, security issues, outages, misconfigurations, or other problems that may occur from using, modifying, deploying, or redistributing this software.
+
+The web interface is intended for local network or VPN access only. It should not be exposed directly to the public internet without proper security hardening, such as HTTPS, secure reverse proxy configuration, strong authentication, and additional security review.
+
+This project is not intended to replace professional monitoring, security, or network diagnostic tools.
+
+---
+
 ## Project Status
 
 This project is currently in early development.
@@ -38,7 +52,7 @@ The project should eventually be able to:
 * Run inside Docker
 * Be deployable with Docker Compose
 * Be understandable and maintainable as a small homelab tool
-*  Provide a local web interface for viewing status and changing settings
+* Provide a local web interface for viewing status and changing settings
 * Support password-based login for the web interface
 * Use browser sessions/cookies so users do not have to log in every time
 * Require password setup or password change on first use
@@ -56,7 +70,7 @@ Important learning topics include:
 * Handling repeated checks over time
 * Logging and storing measured data
 * Structuring a small software project
-* Coding a website to configre settings
+* Coding a website to configure settings
 * Running an application inside Docker
 * Using Docker Compose for deployment
 * Keeping configuration separate from source code
@@ -82,10 +96,14 @@ The project will be built in small steps:
 2. Repeated monitoring loop
 3. Simple data storage
 4. Outage detection logic
-5. Docker support
+5. Basic Docker support
 6. Docker Compose deployment
-7. Report or export functionality
-8. Documentation and cleanup
+7. Simple local web interface
+8. Settings page
+9. First-time password setup
+10. Login and session handling
+11. Report or export functionality
+12. Documentation and cleanup
 
 The exact file formats, configuration structure, and output format are not finalized yet.
 
@@ -121,4 +139,12 @@ It is meant to demonstrate practical work with:
 
 ## License
 
-A license will be added later.
+This project is licensed under the Apache License 2.0.
+
+You are allowed to use, modify, distribute, fork, and use this project commercially, as long as the license terms are followed.
+
+Please keep a visible attribution to the original project repository:
+
+https://github.com/SBergerem/InterConMon
+
+This software is provided without warranty. The author is not responsible for damages, security issues, data loss, outages, or other problems caused by using, modifying, or deploying this software.
