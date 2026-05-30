@@ -219,3 +219,5 @@ __marimo__/
 
 # Additional
 .vscode/
+config/settings.json
+config/secret.key
