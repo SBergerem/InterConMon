@@ -9,9 +9,9 @@ class NetworkChecker:
     def __init__(self):
         pass
     
-    def test_latency(self, ip_address):
+    def test_latency(self, target):
         result = {
-            "target": ip_address,
+            "target": target,
             "success": None,
             "latency_ms": None,
             "error_message": None
@@ -23,7 +23,7 @@ class NetworkChecker:
             ping_result = None  
             
             if system == "Windows":
-                latency = ping(ip_address, unit="ms")
+                latency = ping(target, unit="ms")
                 
                 if isinstance(latency, (int, float)) and not isinstance(latency, bool):
                     result["success"] = True
@@ -36,7 +36,7 @@ class NetworkChecker:
                 env["LC_ALL"] = "C"
                 env["LANG"] = "C"
                 ping_result = subprocess.run(
-                    ["ping", "-c", "1",  ip_address],
+                    ["ping", "-c", "1",  target],
                     capture_output=True,
                     text=True,
                     timeout=5,
