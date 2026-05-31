@@ -221,3 +221,6 @@ __marimo__/
 .vscode/
 config/settings.json
 config/secret.key
+data/*.db
+data/*.sqlite
+data/*.sqlite3

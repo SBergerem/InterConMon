@@ -29,7 +29,7 @@ class Runner:
             test_result = self._nc.test_latency(target)
             
             group_result["test_results"].append({
-                "time": datetime.now().isoformat(),
+                "date_time": test_result["date_time"],
                 "target": target,
                 "success": test_result["success"],
                 "latency_ms": test_result["latency_ms"],
@@ -49,6 +49,6 @@ class Runner:
         return group_result
     
     def run_tests(self):
-        targets = ["1.1.1.1"] #later from config-table in mysql
-        print(self._run_latency_tests(targets))
+        targets = ["1.1.1.1", "8.8.8.8", "google.com", "web"] #later from config-table in mysql
+        return self._run_latency_tests(targets)
     

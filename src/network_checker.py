@@ -2,6 +2,7 @@ import platform
 import subprocess
 import os
 import re
+from datetime import datetime
 from ping3 import ping
 
 class NetworkChecker:
@@ -11,6 +12,7 @@ class NetworkChecker:
     
     def test_latency(self, target):
         result = {
+            "date_time": datetime.now().isoformat(),
             "target": target,
             "success": None,
             "latency_ms": None,

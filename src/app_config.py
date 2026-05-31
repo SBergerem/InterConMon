@@ -1,26 +1,14 @@
 class DatabaseConfig:
     def __init__(self):
-        self.host = ""
-        self.port = 0
-        self.name = ""
-        self.user = ""
-        self.password_encrypted = ""
+        self.path = "./data/inderconmon.db"
         
     def get_config_as_json(self):
         return {
-            "host": self.host,
-            "port": self.port,
-            "name": self.name,
-            "user": self.user,
-            "password_encrypted": self.password_encrypted 
+            "path": self.path 
         }
         
     def set_config_from_json(self, config):
-        self.host = config["host"]
-        self.port = config["port"]
-        self.name = config["name"]
-        self.user = config["user"]
-        self.password_encrypted = config["password_encrypted"] 
+        self.path = config["path"]
 
 
 class EncryptionConfig:
