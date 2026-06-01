@@ -21,8 +21,6 @@ class Runner:
         
         group_result["start_time"] = datetime.now().isoformat()
         
-        
-        
         success_list = []
         
         for target in targets:
