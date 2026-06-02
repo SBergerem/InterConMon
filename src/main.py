@@ -7,7 +7,7 @@ import time
 
 if __name__ == "__main__":
     config = ConfigManager.load_config()
-    AppLogger(config.log_config.log_level)
+    AppLogger.set_log_level(config.log_config.log_level)
     database_manager = DatabaseManager(config.database_config.path)
     database_manager.initialize_database()
     outage_detector = OutageDetector(3)
