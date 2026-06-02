@@ -1,5 +1,6 @@
 from models import LogLevel
 
+
 class DatabaseConfig:
     def __init__(self):
         self.path = "./data/interconmon.db"
@@ -26,13 +27,36 @@ class EncryptionConfig:
 class LogConfig:
 
     def __init__(self):
-        self.log_level = LogLevel.INFO
+        self.enabled_console_log_levels = [
+            LogLevel.INFO,
+            LogLevel.WARNING,
+            LogLevel.ERROR,
+            LogLevel.CRITICAL,
+        ]
+        self.enabled_database_log_levels = [
+            LogLevel.INFO,
+            LogLevel.WARNING,
+            LogLevel.ERROR,
+            LogLevel.CRITICAL,
+        ]
 
-    def get_config_as_json(self) -> dict[str, str]:
-        return {"log_level": self.log_level.value}
+    def get_config_as_json(self) -> dict[str, object]:
+        return {
+            "enabled_console_log_levels": [
+                level.value for level in self.enabled_console_log_levels
+            ],
+            "enabled_database_log_levels": [
+                level.value for level in self.enabled_database_log_levels
+            ],
+        }
 
-    def set_config_from_json(self, config: dict[str, str]) -> None:
-        self.log_level = LogLevel(config["log_level"])
+    def set_config_from_json(self, config: dict[str, object]) -> None:
+        self.enabled_console_log_levels = [
+            LogLevel(level_text) for level_text in config["enabled_console_log_levels"]
+        ]
+        self.enabled_database_log_levels = [
+            LogLevel(level_text) for level_text in config["enabled_database_log_levels"]
+        ]
 
 
 class AppConfig:

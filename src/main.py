@@ -3,23 +3,31 @@ from config_manager import ConfigManager
 from database_manager import DatabaseManager
 from outage_detector import OutageDetector
 from app_logger import AppLogger
+from models import LogType
 import time
 
 if __name__ == "__main__":
     config = ConfigManager.load_config()
-    AppLogger.set_log_level(config.log_config.log_level)
+
     database_manager = DatabaseManager(config.database_config.path)
+
+    AppLogger.initialize(
+        config.log_config.enabled_console_log_levels,
+        config.log_config.enabled_database_log_levels,
+        database_manager,
+    )
+
     database_manager.initialize_database()
     outage_detector = OutageDetector(3)
-
+    
+    AppLogger.info(LogType.SYSTEM, "Initialization completed")
     try:
-        while True:
-            print("Start ping test")
+        while True:       
             test_group = Runner.run_tests()
             group_id = database_manager.save_latency_test_group_result(test_group)
             detector_result = outage_detector.process_group_result(test_group, group_id)
-            print(detector_result)
-            print("End ping test")
+            AppLogger.debug(LogType.SYSTEM, detector_result.connection_state)
+            AppLogger.info(LogType.SYSTEM,"End ping test")
             time.sleep(1)
     except KeyboardInterrupt:
         print("Program exited")

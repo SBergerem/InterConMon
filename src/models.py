@@ -25,11 +25,11 @@ class LogType(Enum):
     
     
 class LogLevel(Enum):
-    DEBUG = "debug"
     INFO = "info"
     WARNING = "warning"
     ERROR = "error"
     CRITICAL = "critical"
+    DEBUG = "debug"
 
 
 @dataclass
