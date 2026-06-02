@@ -3,23 +3,21 @@ from pathlib import Path
 import json
 
 class ConfigManager:
-    _file_path = None
-    
+    _file_path = Path("config/settings.json")
+
     @classmethod           
     def _ensure_file_exists(cls):
-        cls._file_path = Path("config/settings.json")
         cls._file_path.parent.mkdir(parents=True, exist_ok=True)   
         if not cls._file_path.exists():
             cls.save_config(AppConfig())
     
     @classmethod
     def initialize(cls):
-        _file_path = Path("config/settings.json")
         cls._ensure_file_exists()
              
                                    
     @classmethod            
-    def load_config(cls):
+    def load_config(cls):        
         cls._ensure_file_exists()
         
         app_config = AppConfig()

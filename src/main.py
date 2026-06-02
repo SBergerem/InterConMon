@@ -16,8 +16,8 @@ if __name__ == "__main__":
         while True:
             print("Start ping test")
             test_group = Runner.run_tests()
-            database_manager.save_latency_group(test_group)
-            detector_result = outage_detector.process_group_result(test_group)
+            group_id = database_manager.save_latency_test_group_result(test_group)
+            detector_result = outage_detector.process_group_result(test_group, group_id)
             print(detector_result)
             print("End ping test")
             time.sleep(1)

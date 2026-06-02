@@ -170,8 +170,8 @@ class DatabaseManager:
                 """,
                 (
                     log_entry.date_time,
-                    log_entry.log_level,
-                    log_entry.log_type,
+                    log_entry.log_level.value,
+                    log_entry.log_type.value,
                     log_entry.log_message,
                     log_entry.related_object_type,
                     log_entry.related_object_id,
