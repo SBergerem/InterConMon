@@ -58,7 +58,7 @@ Important learning topics include:
 * Handling repeated checks over time
 * Logging and storing measured data
 * Designing a simple database structure
-* Working with MySQL
+* Working with SQLite as a lightweight local database
 * Structuring a small software project
 * Building a local web interface
 * Implementing basic authentication and session handling
@@ -77,7 +77,7 @@ The project is planned as a small multi-component application.
 The main parts are:
 
 * A monitoring component that checks the internet connection
-* A database component that stores measured data and settings
+* A SQLite database component that stores measured data, outage history, logs, and settings
 * A web interface for status information, settings, login, and exports
 * An export component for creating PDF and Excel files on demand
 * Docker support for easier deployment
@@ -88,13 +88,16 @@ The exact structure will be developed step by step.
 
 ## Planned Data Storage
 
-The project is planned to use MySQL for storing monitoring data and settings.
+The project is planned to use SQLite for storing monitoring data, detected outages, logs, and application settings.
+
+SQLite was chosen because InterConMon is intended to be a small local homelab tool. It does not require a separate database server, is easy to deploy, and stores the data in a local database file that can be persisted through Docker volumes.
 
 The database may later store information such as:
 
 * Connection checks
 * Latency measurements
-* Outages
+* Detected outages
+* Application/event logs
 * Speed test results
 * Application settings
 * User/login information
@@ -145,9 +148,9 @@ The long-term goal is that someone can deploy it with Docker Compose without nee
 A future Docker Compose setup may include:
 
 * The InterConMon application container
-* A MySQL database container
-* Persistent volumes for database data
-* Environment-based configuration
+* A persistent volume for the SQLite database file
+* Persistent volumes for configuration and generated exports
+* Environment-based or file-based configuration
 
 The exact Docker setup will be developed as part of the project.
 
@@ -160,12 +163,12 @@ The project will be built in small steps:
 1. Basic connection check
 2. Define result structure
 3. Design first database tables
-4. Add MySQL connection
-5. Store check results in MySQL
+4. Add SQLite database initialization
+5. Store check results in SQLite
 6. Repeated monitoring loop
 7. Outage detection logic
 8. Basic Docker support
-9. Docker Compose deployment with application and database
+9. Docker Compose deployment with persistent SQLite storage
 10. Simple local web interface
 11. Settings page
 12. First-time password setup
@@ -214,7 +217,7 @@ It is meant to demonstrate practical work with:
 * Programming
 * Basic network monitoring
 * Database-backed application design
-* MySQL
+* SQLite
 * Web development
 * Authentication basics
 * Browser-based exports
@@ -224,6 +227,8 @@ It is meant to demonstrate practical work with:
 * Homelab infrastructure
 * Documentation
 * Step-by-step software development
+* Event logging
+* Outage detection and persistence
 
 ---
 
