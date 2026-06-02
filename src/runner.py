@@ -7,7 +7,7 @@ class Runner:
     _network_checker = None
 
     @classmethod
-    def _run_latency_tests(cls, targets):
+    def _run_latency_tests(cls, targets: list[str]) -> LatencyTestGroupResult:
         if cls._network_checker is None:
             cls._network_checker = NetworkChecker()
         
@@ -52,6 +52,6 @@ class Runner:
         return group_result
 
     @classmethod
-    def run_tests(cls):
+    def run_tests(cls) -> LatencyTestGroupResult:
         targets = ["1.1.1.1"]  # later from config-table in mysql
         return cls._run_latency_tests(targets)

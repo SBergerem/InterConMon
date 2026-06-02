@@ -1,14 +1,16 @@
 from enum import Enum
 from datetime import datetime
-from models import OutageDetectorResult, ConnectionState, OutageChangeState
-
-
-
+from models import (
+    OutageDetectorResult,
+    ConnectionState,
+    OutageChangeState,
+    LatencyTestGroupResult,
+)
 
 
 class OutageDetector:
 
-    def __init__(self, max_failed_group_test_count):
+    def __init__(self, max_failed_group_test_count) -> None:
         self._current_connection_state = ConnectionState.UNKNOWN
         self._first_failed_test_time = None
         self._failed_groups_test_count = 0
@@ -19,7 +21,9 @@ class OutageDetector:
         else:
             self._max_failed_group_test_count = 1
 
-    def process_group_result(self, group_result, group_id):
+    def process_group_result(
+        self, group_result: LatencyTestGroupResult, group_id: int
+    ) -> OutageDetectorResult:
         test_succeeded = group_result.any_success
         last_connection_state = self._current_connection_state
         connection_test_date_time = group_result.end_time

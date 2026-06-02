@@ -9,7 +9,7 @@ from models import LatencyTestResult
 class NetworkChecker:
 
     @classmethod
-    def test_latency(cls, target):
+    def test_latency(cls, target: str) -> LatencyTestResult:
         result = LatencyTestResult(
             date_time=datetime.now().isoformat(),
             target=target,

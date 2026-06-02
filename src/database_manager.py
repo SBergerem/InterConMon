@@ -1,27 +1,29 @@
 from pathlib import Path
 import sqlite3
+from sqlite3 import Cursor
 from outage_detector import OutageChangeState
+from models import LatencyTestGroupResult, OutageDetectorResult, LogEntry
 
 
 class DatabaseManager:
 
-    def __init__(self, database_path):
+    def __init__(self, database_path: str) -> None:
         self._database_path = Path(database_path)
         self._database_path.parent.mkdir(parents=True, exist_ok=True)
         self._connection = None
 
-    def _open_connection(self):
+    def _open_connection(self) -> Cursor:
         self._connection = sqlite3.connect(self._database_path)
         cursor = self._connection.cursor()
         cursor.execute("PRAGMA foreign_keys = ON")
         return cursor
 
-    def _close_connection(self):
+    def _close_connection(self) -> None:
         if self._connection is not None:
             self._connection.close()
             self._connection = None
 
-    def initialize_database(self):
+    def initialize_database(self) -> None:
         try:
             cursor = self._open_connection()
 
@@ -82,7 +84,7 @@ class DatabaseManager:
         finally:
             self._close_connection()
 
-    def save_latency_test_group_result(self, latency_test_group_result):
+    def save_latency_test_group_result(self, latency_test_group_result: LatencyTestGroupResult) -> int:
         group_id = None
 
         try:
@@ -130,8 +132,8 @@ class DatabaseManager:
 
         return group_id
 
-    def save_outage(self, outage_data):
-        if outage_data.outage_change_state != OutageChangeState.ENDED.value:
+    def save_outage(self, outage_detection_result: OutageDetectorResult) -> None:
+        if outage_detection_result.outage_change_state != OutageChangeState.ENDED.value:
             return
 
         try:
@@ -143,11 +145,11 @@ class DatabaseManager:
                 VALUES (?, ?, ?, ?, ?)
                 """,
                 (
-                    outage_data.outage_start_time,
-                    outage_data.outage_end_time,
-                    outage_data.outage_duration_sec,
-                    outage_data.outage_started_group_id,
-                    outage_data.outage_ended_group_id,
+                    outage_detection_result.outage_start_time,
+                    outage_detection_result.outage_end_time,
+                    outage_detection_result.outage_duration_sec,
+                    outage_detection_result.outage_started_group_id,
+                    outage_detection_result.outage_ended_group_id,
                 ),
             )
 
@@ -159,7 +161,7 @@ class DatabaseManager:
         finally:
             self._close_connection()
 
-    def save_log_entry(self, log_entry):
+    def save_log_entry(self, log_entry: LogEntry) -> None:
         try:
             cursor = self._open_connection()
 
