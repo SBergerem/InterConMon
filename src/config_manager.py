@@ -5,9 +5,6 @@ import json
 class ConfigManager:
     _file_path = None
     
-    def __init__(self):
-        pass
-    
     @classmethod           
     def _ensure_file_exists(cls):
         cls._file_path = Path("config/settings.json")

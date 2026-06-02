@@ -71,10 +71,10 @@ class DatabaseManager:
                     date_time TEXT NOT NULL,
                     log_level TEXT NOT NULL,
                     log_type TEXT NOT NULL,
-                    log_message Text NOT NULL,
+                    log_message TEXT NOT NULL,
                     related_object_type TEXT,
                     related_object_id INTEGER,
-                    details_json TEXT,
+                    details_json TEXT
                 )           
             """)
 

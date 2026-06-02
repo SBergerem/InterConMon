@@ -1,22 +1,4 @@
-from enum import Enum
-from models import LogEntry
-
-class LogType(Enum):
-    UNKNOWN = "unknown"    
-    SYSTEM = "system"
-    DATABASE = "database"
-    OUTAGE = "outage"
-    CONFIG = "config"
-    WEB = "web"
-    EXPORT = "export"
-    SECURITY = "security"
-    
-class LogLevel(Enum):
-    DEBUG = "debug"
-    INFO = "info"
-    WARNING = "warning"
-    ERROR = "error"
-    CRITICAL = "critical"
+from models import LogEntry, LogLevel, LogType
     
 class AppLogger:
     _current_log_level = LogLevel.INFO
@@ -25,25 +7,25 @@ class AppLogger:
         pass
     
     @classmethod
-    def set_log_level(log_level):
-        _current_log_level = log_level
+    def set_log_level(cls, log_level):
+        cls._current_log_level = log_level
     
     @classmethod
-    def debug(log_type, message, related_object_type=None, related_object_id=None, details_json=None):
+    def debug(cls, log_type, message, related_object_type=None, related_object_id=None, details_json=None):
         pass
     
     @classmethod
-    def info(log_type, message, related_object_type=None, related_object_id=None, details_json=None):
+    def info(cls, log_type, message, related_object_type=None, related_object_id=None, details_json=None):
         pass
     
     @classmethod
-    def warning(log_type, message, related_object_type=None, related_object_id=None, details_json=None):
+    def warning(cls, log_type, message, related_object_type=None, related_object_id=None, details_json=None):
         pass
     
     @classmethod
-    def error(log_type, message, related_object_type=None, related_object_id=None, details_json=None):
+    def error(cls, log_type, message, related_object_type=None, related_object_id=None, details_json=None):
         pass
     
     @classmethod
-    def critical(log_type, message, related_object_type=None, related_object_id=None, details_json=None):
+    def critical(cls, log_type, message, related_object_type=None, related_object_id=None, details_json=None):
         pass

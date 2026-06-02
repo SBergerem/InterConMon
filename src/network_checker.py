@@ -30,7 +30,7 @@ class NetworkChecker:
                     result.success = True
                     result.latency_ms = latency
                 else:
-                    result["success"] = False
+                    result.success = False
 
             elif system in ["Linux", "Darwin"]:
                 env = os.environ.copy()
@@ -67,6 +67,6 @@ class NetworkChecker:
 
         except Exception as ex:
             result.success = False
-            result.error_message = ex
+            result.error_message = str(ex)
 
         return result

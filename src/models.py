@@ -1,6 +1,37 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from app_logger import LogLevel, LogType
+from enum import Enum
+
+class ConnectionState(Enum):
+    UNKNOWN = "unknown"
+    ONLINE = "online"
+    OFFLINE = "offline"
+
+
+class OutageChangeState(Enum):
+    NONE = "none"
+    STARTED = "started"
+    ENDED = "ended"
+
+
+class LogType(Enum):
+    UNKNOWN = "unknown"    
+    SYSTEM = "system"
+    DATABASE = "database"
+    OUTAGE = "outage"
+    CONFIG = "config"
+    WEB = "web"
+    EXPORT = "export"
+    SECURITY = "security"
+    
+    
+class LogLevel(Enum):
+    DEBUG = "debug"
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+    CRITICAL = "critical"
+
 
 @dataclass
 class LatencyTestResult:
@@ -10,6 +41,7 @@ class LatencyTestResult:
     latency_ms: float | None
     error_message: str | None
 
+
 @dataclass
 class LatencyTestGroupResult:
     start_time: datetime | None
@@ -18,6 +50,7 @@ class LatencyTestGroupResult:
     any_success: bool | None
     group_success: bool | None
     test_results: list[LatencyTestResult] = field(default_factory=list)
+    
     
 @dataclass
 class OutageDetectorResult:
@@ -29,6 +62,7 @@ class OutageDetectorResult:
     outage_duration_sec: float | None
     outage_started_group_id: int | None
     outage_ended_group_id: int | None
+    
     
 @dataclass
 class LogEntry:

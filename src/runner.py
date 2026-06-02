@@ -31,15 +31,15 @@ class Runner:
 
             group_result.test_results.append(
                 LatencyTestResult(
-                    date_time=test_result.datetime,
+                    date_time=test_result.date_time,
                     target=target,
                     success=test_result.success,
-                    latency_ms=test_result.latency,
+                    latency_ms=test_result.latency_ms,
                     error_message=test_result.error_message,
                 )
             )
 
-            success_list.append(test_result["success"])
+            success_list.append(test_result.success)
 
         group_result.any_success = any(success_list)
         group_result.group_success = (len(success_list) > 0) and all(success_list)

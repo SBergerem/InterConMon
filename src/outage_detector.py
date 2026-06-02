@@ -1,18 +1,9 @@
 from enum import Enum
 from datetime import datetime
-from models import OutageDetectorResult
+from models import OutageDetectorResult, ConnectionState, OutageChangeState
 
 
-class ConnectionState(Enum):
-    UNKNOWN = "unknown"
-    ONLINE = "online"
-    OFFLINE = "offline"
 
-
-class OutageChangeState(Enum):
-    NONE = "none"
-    STARTED = "started"
-    ENDED = "ended"
 
 
 class OutageDetector:
