@@ -1,8 +1,11 @@
 from models import LogEntry, LogLevel, LogType
 import logging
-from database_manager import DatabaseManager
 from datetime import datetime
+from typing import TYPE_CHECKING
 import json
+
+if TYPE_CHECKING:
+    from database_manager import DatabaseManager
 
 
 class AppLogger:
@@ -92,14 +95,14 @@ class AppLogger:
                     cls._logger.debug(f"[{log_type.value}] {message}")
                 case LogLevel.EXTENDED_DEBUG:
                     cls._logger.debug(f"(extended) [{log_type.value}] {message}")
-                case LogLevel.DETAILED_DEBUG:    
+                case LogLevel.DETAILED_DEBUG:
                     cls._logger.debug(f"(detailed) [{log_type.value}] {message}")
 
         if cls._database_manager is None:
             return
 
         if cls._is_database_logging_allowed(log_level):
-            details_json = None          
+            details_json = None
             if details is not None:
                 details_json = json.dumps(details, ensure_ascii=False)
 
@@ -138,7 +141,7 @@ class AppLogger:
             related_object_id,
             details,
         )
-        
+
     @classmethod
     def extended_debug(
         cls,
@@ -158,7 +161,7 @@ class AppLogger:
             related_object_id,
             details,
         )
-        
+
     @classmethod
     def detailed_debug(
         cls,

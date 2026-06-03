@@ -25,7 +25,7 @@ class Runner:
         group_result = LatencyTestGroupResult(
             start_time=datetime.now().isoformat(),
             end_time="",
-            time_needed_sec=None,
+            time_needed_sec=-1.0,
             any_success=False,
             group_success=False,
             test_results=[],

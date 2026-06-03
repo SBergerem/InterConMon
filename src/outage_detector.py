@@ -26,8 +26,8 @@ class OutageDetector:
         self, group_result: LatencyTestGroupResult, group_id: int
     ) -> OutageDetectorResult:
         AppLogger.extended_debug(
-            LogType.GENERAL,
-            "Started process group result",
+            LogType.OUTAGE,
+            "Started outage check",
             "process_group_result",
             related_object_type="LatencyTestGroupResult",
             related_object_id=group_id,
@@ -80,8 +80,8 @@ class OutageDetector:
                     outage_change_state = OutageChangeState.STARTED
 
         AppLogger.extended_debug(
-            LogType.GENERAL,
-            "Ended process group result",
+            LogType.OUTAGE,
+            "Ended outage checkt",
             "process_group_result",
             related_object_type="LatencyTestGroupResult",
             related_object_id=group_id,

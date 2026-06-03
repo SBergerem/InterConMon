@@ -26,14 +26,13 @@ if __name__ == "__main__":
             test_group = Runner.run_tests()
             group_id = database_manager.save_latency_test_group_result(test_group)
             detector_result = outage_detector.process_group_result(test_group, group_id)
-            if detector_result.outage_change_state == OutageChangeState.STARTED:
+            if detector_result.outage_change_state == OutageChangeState.STARTED.value:
                 AppLogger.info(LogType.SYSTEM, "Outage started", "main")
-            if detector_result.outage_change_state == OutageChangeState.ENDED:
+            if detector_result.outage_change_state == OutageChangeState.ENDED.value:
                 outage_detection_result_id = database_manager.save_outage(detector_result)
                 AppLogger.info(LogType.SYSTEM, "Outage ended", "main", related_object_type="OutageDetectorResult", related_object_id=outage_detection_result_id)
 
             AppLogger.debug(LogType.SYSTEM, detector_result.connection_state, "main")
-            AppLogger.info(LogType.SYSTEM,"End ping test", "main")
             time.sleep(1)
     except KeyboardInterrupt:
         print("Program exited")
