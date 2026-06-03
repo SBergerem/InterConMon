@@ -15,7 +15,7 @@ class EncryptionManager:
             with open(self._key_path, "wb") as file:
                 file.write(key)
 
-    def _load_key(self) -> str:
+    def _load_key(self) -> bytes:
         self._ensure_key_exists()
 
         with open(self._key_path, "rb") as file:

@@ -4,24 +4,31 @@ import os
 import re
 from datetime import datetime
 from ping3 import ping
-from models import LatencyTestResult
+from models import LatencyTestResult, LogType
+from app_logger import AppLogger
+
 
 class NetworkChecker:
 
     @classmethod
     def test_latency(cls, target: str) -> LatencyTestResult:
+        AppLogger.detailed_debug(
+            LogType.SCAN,
+            "Starting ping test",
+            "test_latency",
+            details={"target": target},
+        )
+
         result = LatencyTestResult(
             date_time=datetime.now().isoformat(),
             target=target,
-            success=None,
+            success=False,
             latency_ms=None,
             error_message=None,
         )
 
         try:
             system = platform.system()
-
-            ping_result = None
 
             if system == "Windows":
                 latency = ping(target, unit="ms")
@@ -31,6 +38,13 @@ class NetworkChecker:
                     result.latency_ms = latency
                 else:
                     result.success = False
+                    result.error_message = "Error: Ping failed or timed out"
+                    AppLogger.error(
+                        LogType.SCAN,
+                        result.error_message,
+                        "test_latency",
+                        details={"target": target, "ping_result": latency},
+                    )
 
             elif system in ["Linux", "Darwin"]:
                 env = os.environ.copy()
@@ -57,16 +71,62 @@ class NetworkChecker:
                         result.latency_ms = float(latency_text.group(1))
                     else:
                         result.latency_ms = None
-                        result.error_message = ping_result.stderr
+                        result.error_message = (
+                            "Ping succeeded, but latency could not be parsed"
+                        )
+                        AppLogger.warning(
+                            LogType.SCAN,
+                            result.error_message,
+                            "test_latency",
+                            details={"target": target, "stdout": ping_result.stdout},
+                        )
                 else:
                     result.success = False
+                    result.error_message = (
+                        ping_result.stderr
+                        or ping_result.stdout
+                        or "Error: Ping failed or timed out"
+                    )
 
+                    AppLogger.error(
+                        LogType.SCAN,
+                        result.error_message,
+                        "test_latency",
+                        details={
+                            "target": target,
+                            "returncode": ping_result.returncode,
+                        },
+                    )
             else:
                 result.success = False
                 result.error_message = "Error: Can't ping. OS unknown"
+                AppLogger.error(
+                    LogType.SCAN,
+                    result.error_message,
+                    "test_latency",
+                    details={"target": target},
+                )
 
         except Exception as ex:
             result.success = False
             result.error_message = str(ex)
+            AppLogger.error(
+                LogType.SCAN,
+                result.error_message,
+                "test_latency",
+                details={"target": target},
+            )
+
+        AppLogger.detailed_debug(
+            LogType.SCAN,
+            "Ended ping test",
+            "test_latency",
+            details={
+                "target": target,
+                "success": result.success,
+                "latency_ms": result.latency_ms,
+                "error_message": result.error_message,
+            },
+        )
 
         return result

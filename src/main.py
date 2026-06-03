@@ -3,7 +3,7 @@ from config_manager import ConfigManager
 from database_manager import DatabaseManager
 from outage_detector import OutageDetector
 from app_logger import AppLogger
-from models import LogType
+from models import LogType, OutageChangeState 
 import time
 
 if __name__ == "__main__":
@@ -20,14 +20,20 @@ if __name__ == "__main__":
     database_manager.initialize_database()
     outage_detector = OutageDetector(3)
     
-    AppLogger.info(LogType.SYSTEM, "Initialization completed")
+    AppLogger.info(LogType.SYSTEM, "Initialization completed", "main")
     try:
         while True:       
             test_group = Runner.run_tests()
             group_id = database_manager.save_latency_test_group_result(test_group)
             detector_result = outage_detector.process_group_result(test_group, group_id)
-            AppLogger.debug(LogType.SYSTEM, detector_result.connection_state)
-            AppLogger.info(LogType.SYSTEM,"End ping test")
+            if detector_result.outage_change_state == OutageChangeState.STARTED:
+                AppLogger.info(LogType.SYSTEM, "Outage started", "main")
+            if detector_result.outage_change_state == OutageChangeState.ENDED:
+                outage_detection_result_id = database_manager.save_outage(detector_result)
+                AppLogger.info(LogType.SYSTEM, "Outage ended", "main", related_object_type="OutageDetectorResult", related_object_id=outage_detection_result_id)
+
+            AppLogger.debug(LogType.SYSTEM, detector_result.connection_state, "main")
+            AppLogger.info(LogType.SYSTEM,"End ping test", "main")
             time.sleep(1)
     except KeyboardInterrupt:
         print("Program exited")

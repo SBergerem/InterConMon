@@ -15,6 +15,8 @@ class OutageChangeState(Enum):
 
 class LogType(Enum):
     UNKNOWN = "unknown"    
+    SCAN = "scan"
+    GENERAL = "general"
     SYSTEM = "system"
     DATABASE = "database"
     OUTAGE = "outage"
@@ -30,13 +32,15 @@ class LogLevel(Enum):
     ERROR = "error"
     CRITICAL = "critical"
     DEBUG = "debug"
+    EXTENDED_DEBUG = "extended_debug"
+    DETAILED_DEBUG = "detailed_debug"
 
 
 @dataclass
 class LatencyTestResult:
     date_time: str
     target: str
-    success: bool | None
+    success: bool
     latency_ms: float | None
     error_message: str | None
 
@@ -44,10 +48,10 @@ class LatencyTestResult:
 @dataclass
 class LatencyTestGroupResult:
     start_time: str | None
-    end_time: str | None
+    end_time: str
     time_needed_sec: float | None
-    any_success: bool | None
-    group_success: bool | None
+    any_success: bool
+    group_success: bool
     test_results: list[LatencyTestResult] = field(default_factory=list)
     
     
@@ -69,6 +73,7 @@ class LogEntry:
     log_level: LogLevel
     log_type: LogType
     log_message: str
+    function_name: str
     related_object_type: str | None
     related_object_id: int | None
     details_json: str | None
