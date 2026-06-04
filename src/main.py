@@ -39,6 +39,7 @@ if __name__ == "__main__":
 
         Runner.prepare(settings_manager.app_settings.latency_test_settings.targets)
 
+        AppLogger.info(LogType.SYSTEM, "Runner start", "main", "main")
         while True:
             test_group: LatencyTestGroupResult | None = Runner.run_tests()
 

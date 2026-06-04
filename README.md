@@ -1,10 +1,10 @@
 # InterConMon – Homelab Internet Monitor
 
-InterConMon is a Docker-based learning project for monitoring internet connection stability in a homelab environment.
+InterConMon is a Docker-oriented learning project for monitoring internet connection stability in a homelab environment.
 
-The goal of this project is to build a small service that can regularly check the internet connection, detect possible outages, store monitoring data, and provide useful reports through a local web interface.
+The goal of this project is to build a small local service that can regularly check the internet connection, detect possible outages, store monitoring data, and later provide useful reports through a local web interface.
 
-This project is intentionally developed step by step as a learning project. The focus is not only on building a working tool, but also on understanding the logic, structure, data storage, security considerations, and deployment of a small monitoring service.
+This project is intentionally developed step by step as a learning project. The focus is not only on building a working tool, but also on understanding the logic, structure, data storage, logging, security considerations, and deployment of a small monitoring service.
 
 ---
 
@@ -12,7 +12,19 @@ This project is intentionally developed step by step as a learning project. The 
 
 This project is currently in early development.
 
-The exact implementation details are still being planned and built step by step.
+The current version already contains the first working internal monitoring flow:
+
+* Basic latency checks
+* Grouped latency test results
+* SQLite database initialization
+* Storage of latency test groups and individual latency tests
+* Outage detection based on failed test groups
+* Storage of completed outages
+* Database-backed application settings
+* Structured application logging
+* Multiple debug levels for different levels of detail
+
+The local web interface, authentication, exports, Docker setup, and reporting features are planned but not finished yet.
 
 ---
 
@@ -22,7 +34,7 @@ This project was started because of recurring stability issues with my current i
 
 The goal is to better understand when connection problems happen, how often they occur, and how long they last.
 
-At the same time, this project is used as a practical learning project for programming, Docker, monitoring, databases, web development, and homelab infrastructure.
+At the same time, this project is used as a practical learning project for programming, Docker, monitoring, databases, web development, logging, and homelab infrastructure.
 
 ---
 
@@ -34,6 +46,8 @@ The project should eventually be able to:
 * Measure connection quality, for example latency
 * Detect internet outages
 * Store monitoring data in a database
+* Store application settings in the database
+* Provide structured application logs
 * Provide a local web interface for viewing status and changing settings
 * Support password-based login for the web interface
 * Use browser sessions/cookies so users do not have to log in every time
@@ -56,10 +70,14 @@ Important learning topics include:
 * Designing a small monitoring service
 * Thinking in states, for example online and offline
 * Handling repeated checks over time
+* Detecting outages based on multiple failed checks
 * Logging and storing measured data
 * Designing a simple database structure
 * Working with SQLite as a lightweight local database
+* Storing application settings in a database
+* Using JSON for flexible settings storage
 * Structuring a small software project
+* Handling exceptions and error cases cleanly
 * Building a local web interface
 * Implementing basic authentication and session handling
 * Creating browser-based file exports
@@ -70,6 +88,133 @@ Important learning topics include:
 
 ---
 
+## Documentation
+
+Additional technical documentation is available in:
+
+* [`docs/architecture.md`](docs/architecture.md)
+* [`docs/roadmap.md`](docs/roadmap.md)
+
+The architecture document describes the current internal structure, major components, database tables, logging concept, runtime flow, and important implementation notes.
+
+---
+
+## Current Architecture
+
+InterConMon is currently split into several focused components.
+
+The most important components are:
+
+* `main.py`
+
+  * prepares and starts the application
+  * initializes configuration, database, logger, settings, and monitoring flow
+
+* `Runner`
+
+  * currently runs latency test groups
+  * should later own the full monitoring loop
+  * should eventually be started by `main.py`, possibly in its own background thread
+
+* `NetworkChecker`
+
+  * performs individual latency checks
+  * uses `ping3` on Windows
+  * uses the system `ping` command on Linux/macOS
+
+* `OutageDetector`
+
+  * tracks connection state
+  * detects when an outage starts
+  * detects when an outage ends
+  * calculates outage duration
+
+* `DatabaseManager`
+
+  * initializes SQLite tables
+  * stores latency test groups
+  * stores individual latency tests
+  * stores outages
+  * stores logs
+  * stores and loads application settings
+
+* `AppLogger`
+
+  * provides structured logging
+  * writes logs to console
+  * can write logs to SQLite
+  * supports multiple debug/detail levels
+
+* `AppSettingsManager`
+
+  * converts application settings between Python objects and database rows
+  * stores settings as JSON text in SQLite
+
+The long-term direction is that `main.py` should only prepare and start the application, while `Runner` should own the actual monitoring loop.
+
+---
+
+## Logging Concept
+
+InterConMon uses a custom `AppLogger` wrapper around Python logging and SQLite persistence.
+
+The logger supports multiple log levels and detail levels:
+
+* `detailed_debug`
+
+  * very detailed internal information
+  * for example individual ping tests or SQL statements
+
+* `extended_debug`
+
+  * larger internal workflows
+  * for example a full latency test group or database transaction
+
+* `debug`
+
+  * normal technical debug information
+
+* `info`
+
+  * normal runtime information
+
+* `warning`
+
+  * unusual but recoverable situations
+
+* `error`
+
+  * failed operations
+
+* `critical`
+
+  * severe failures that may stop the program
+
+Database-internal logging is handled carefully because logging itself can also write to the database. In some cases, an existing cursor is passed into logging methods to avoid opening nested database connections.
+
+Important cursor rule:
+
+```text
+SELECT:
+- execute query
+- fetch result
+- then log
+
+INSERT:
+- execute insert
+- store lastrowid
+- then log
+
+UPDATE/DELETE:
+- execute statement
+- store rowcount if needed
+- then log
+```
+
+This prevents logging from overwriting cursor state such as `fetchall()` results or `lastrowid`.
+
+---
+
 ## Planned Architecture
 
 The project is planned as a small multi-component application.
@@ -77,33 +222,42 @@ The project is planned as a small multi-component application.
 The main parts are:
 
 * A monitoring component that checks the internet connection
+* A runner component that owns the monitoring loop
 * A SQLite database component that stores measured data, outage history, logs, and settings
+* A settings component that loads and stores runtime settings
 * A web interface for status information, settings, login, and exports
 * An export component for creating PDF and Excel files on demand
 * Docker support for easier deployment
 
-The exact structure will be developed step by step.
+The exact structure will continue to be developed step by step.
 
 ---
 
 ## Planned Data Storage
 
-The project is planned to use SQLite for storing monitoring data, detected outages, logs, and application settings.
+The project uses SQLite for storing monitoring data, detected outages, logs, and application settings.
 
 SQLite was chosen because InterConMon is intended to be a small local homelab tool. It does not require a separate database server, is easy to deploy, and stores the data in a local database file that can be persisted through Docker volumes.
 
-The database may later store information such as:
+The database currently includes or is planned to include data such as:
 
-* Connection checks
-* Latency measurements
+* Latency test groups
+* Individual latency measurements
 * Detected outages
 * Application/event logs
-* Speed test results
 * Application settings
+* Speed test results
 * User/login information
 * Session data
 
-The exact database schema is not finalized yet and will be designed during development.
+Settings are stored as JSON text in SQLite. This keeps the settings system flexible while still keeping the configuration inside the database.
+
+Example setting names:
+
+```text
+latency_test_settings_targets
+latency_test_settings_interval_seconds
+```
 
 ---
 
@@ -116,7 +270,9 @@ The web interface should eventually allow users to:
 * View the current connection status
 * View recent measurements
 * View detected outages
+* View application logs
 * Change monitoring settings
+* Change logging settings
 * Trigger PDF exports
 * Trigger Excel exports
 * Download generated files directly in the browser
@@ -150,7 +306,7 @@ A future Docker Compose setup may include:
 * The InterConMon application container
 * A persistent volume for the SQLite database file
 * Persistent volumes for configuration and generated exports
-* Environment-based or file-based configuration
+* Environment-based or file-based bootstrap configuration
 
 The exact Docker setup will be developed as part of the project.
 
@@ -158,25 +314,58 @@ The exact Docker setup will be developed as part of the project.
 
 ## Planned Project Direction
 
-The project will be built in small steps:
+The project will be built in small steps.
+
+Current and near-term direction:
 
 1. Basic connection check
-2. Define result structure
+2. Define result structures
 3. Design first database tables
 4. Add SQLite database initialization
 5. Store check results in SQLite
-6. Repeated monitoring loop
-7. Outage detection logic
-8. Basic Docker support
-9. Docker Compose deployment with persistent SQLite storage
-10. Simple local web interface
-11. Settings page
-12. First-time password setup
-13. Login and session handling
-14. Browser-based PDF and Excel export
-15. Documentation and cleanup
+6. Add structured logging
+7. Add database-backed settings
+8. Repeated monitoring loop
+9. Outage detection logic
+10. Move monitoring loop responsibility into `Runner`
+11. Prepare `Runner` for clean start/stop behavior
+12. Add basic Docker support
+13. Add Docker Compose deployment with persistent SQLite storage
+14. Add simple local web interface
+15. Add settings page
+16. Add first-time password setup
+17. Add login and session handling
+18. Add browser-based PDF and Excel export
+19. Add documentation and cleanup
 
-The exact file formats, configuration structure, database schema, and output format are not finalized yet.
+The exact file formats, configuration structure, database schema, and output formats may still change during development.
+
+---
+
+## Future Runner Direction
+
+The `Runner` should eventually become the central runtime component.
+
+The intended long-term structure is:
+
+```text
+main.py
+→ prepares dependencies
+→ initializes database and logging
+→ loads settings
+→ creates Runner
+→ starts Runner
+
+Runner
+→ owns monitoring loop
+→ runs latency test groups
+→ stores results
+→ triggers outage detection
+→ stores outage data
+→ waits for the next interval
+```
+
+Later, the `Runner` may run in its own background thread so that the monitoring loop can run alongside a local web interface.
 
 ---
 
@@ -186,11 +375,11 @@ This tool is intended to run locally in a homelab environment.
 
 It should not require public internet access to the service itself.
 
-Configuration files, database contents, and generated monitoring data may contain personal or network-related information and should be handled carefully.
+Configuration files, database contents, logs, and generated monitoring data may contain personal or network-related information and should be handled carefully.
 
 The web interface is intended for local homelab or VPN access only. It should not be exposed directly to the public internet without additional security considerations such as HTTPS, secure reverse proxy configuration, strong authentication, and proper authentication hardening.
 
-Secrets such as database passwords, session secrets, API keys, or other sensitive configuration values should not be committed to the repository.
+Secrets such as session secrets, API keys, passwords, or other sensitive configuration values should not be committed to the repository.
 
 ---
 
@@ -229,6 +418,8 @@ It is meant to demonstrate practical work with:
 * Step-by-step software development
 * Event logging
 * Outage detection and persistence
+* Settings persistence
+* Structured application architecture
 
 ---
 
