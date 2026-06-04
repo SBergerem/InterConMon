@@ -3,7 +3,7 @@ import subprocess
 import os
 import re
 from datetime import datetime
-from ping3 import ping
+from ping3 import ping  # type: ignore
 from models import LatencyTestResult
 
 class NetworkChecker:
@@ -13,7 +13,7 @@ class NetworkChecker:
         result = LatencyTestResult(
             date_time=datetime.now().isoformat(),
             target=target,
-            success=None,
+            success=False,
             latency_ms=None,
             error_message=None,
         )

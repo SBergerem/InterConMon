@@ -17,7 +17,7 @@ class ConfigManager:
         cls._ensure_file_exists()
 
     @classmethod
-    def load_config(cls) -> None:
+    def load_config(cls) -> AppConfig:
         cls._ensure_file_exists()
 
         app_config = AppConfig()
@@ -28,6 +28,6 @@ class ConfigManager:
         return app_config
 
     @classmethod
-    def save_config(cls, config) -> None:
+    def save_config(cls, config: AppConfig) -> None:
         with open(cls._file_path, "w", encoding="utf-8") as file:
             json.dump(config.get_config_as_json(), file, indent=4)

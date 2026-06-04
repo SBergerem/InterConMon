@@ -3,6 +3,7 @@ from datetime import datetime
 import time
 from models import LatencyTestResult, LatencyTestGroupResult
 
+
 class Runner:
     _network_checker = None
 
@@ -10,13 +11,13 @@ class Runner:
     def _run_latency_tests(cls, targets: list[str]) -> LatencyTestGroupResult:
         if cls._network_checker is None:
             cls._network_checker = NetworkChecker()
-        
+
         group_result = LatencyTestGroupResult(
             start_time=None,
-            end_time=None,
+            end_time="",
             time_needed_sec=None,
-            any_success=None,
-            group_success=None,
+            any_success=False,
+            group_success=False,
             test_results=[],
         )
 
@@ -24,7 +25,7 @@ class Runner:
 
         group_result.start_time = datetime.now().isoformat()
 
-        success_list = []
+        success_list: list[bool] = []
 
         for target in targets:
             test_result = cls._network_checker.test_latency(target)

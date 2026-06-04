@@ -1,6 +1,6 @@
 from pathlib import Path
 import sqlite3
-from sqlite3 import Cursor
+from sqlite3 import Cursor, Connection
 from outage_detector import OutageChangeState
 from models import LatencyTestGroupResult, OutageDetectorResult, LogEntry
 
@@ -10,11 +10,11 @@ class DatabaseManager:
     def __init__(self, database_path: str) -> None:
         self._database_path = Path(database_path)
         self._database_path.parent.mkdir(parents=True, exist_ok=True)
-        self._connection = None
+        self._connection: Connection | None = None
 
     def _open_connection(self) -> Cursor:
         self._connection = sqlite3.connect(self._database_path)
-        cursor = self._connection.cursor()
+        cursor: Cursor = self._connection.cursor()
         cursor.execute("PRAGMA foreign_keys = ON")
         return cursor
 
@@ -80,15 +80,16 @@ class DatabaseManager:
                 )           
             """)
 
-            self._connection.commit()
+            if self._connection is not None:
+                self._connection.commit()
         finally:
             self._close_connection()
 
     def save_latency_test_group_result(self, latency_test_group_result: LatencyTestGroupResult) -> int:
-        group_id = None
+        group_id = -1
 
         try:
-            cursor = self._open_connection()
+            cursor: Cursor = self._open_connection()
 
             cursor.execute(
                 """
@@ -104,7 +105,8 @@ class DatabaseManager:
                 ),
             )
 
-            group_id = cursor.lastrowid
+            if cursor.lastrowid is not None:
+                group_id = cursor.lastrowid
 
             for single_test_result in latency_test_group_result.test_results:
                 cursor.execute(
@@ -122,7 +124,8 @@ class DatabaseManager:
                     ),
                 )
 
-            self._connection.commit()
+            if self._connection is not None:
+                self._connection.commit()
         except Exception as ex:
             if self._connection is not None:
                 self._connection.rollback()
@@ -137,7 +140,7 @@ class DatabaseManager:
             return
 
         try:
-            cursor = self._open_connection()
+            cursor: Cursor = self._open_connection()
 
             cursor.execute(
                 """
@@ -153,7 +156,8 @@ class DatabaseManager:
                 ),
             )
 
-            self._connection.commit()
+            if self._connection is not None:
+                self._connection.commit()
         except Exception as ex:
             if self._connection is not None:
                 self._connection.rollback()
@@ -163,7 +167,7 @@ class DatabaseManager:
 
     def save_log_entry(self, log_entry: LogEntry) -> None:
         try:
-            cursor = self._open_connection()
+            cursor: Cursor = self._open_connection()
 
             cursor.execute(
                 """
@@ -180,8 +184,8 @@ class DatabaseManager:
                     log_entry.details_json,
                 ),
             )
-            
-            self._connection.commit()
+            if self._connection is not None:
+                self._connection.commit()
         except Exception as ex:
             if self._connection is not None:
                 self._connection.rollback()

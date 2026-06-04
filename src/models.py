@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from enum import Enum
 
+
 class ConnectionState(Enum):
     UNKNOWN = "unknown"
     ONLINE = "online"
@@ -14,7 +15,7 @@ class OutageChangeState(Enum):
 
 
 class LogType(Enum):
-    UNKNOWN = "unknown"    
+    UNKNOWN = "unknown"
     SYSTEM = "system"
     DATABASE = "database"
     OUTAGE = "outage"
@@ -22,8 +23,8 @@ class LogType(Enum):
     WEB = "web"
     EXPORT = "export"
     SECURITY = "security"
-    
-    
+
+
 class LogLevel(Enum):
     INFO = "info"
     WARNING = "warning"
@@ -36,7 +37,7 @@ class LogLevel(Enum):
 class LatencyTestResult:
     date_time: str
     target: str
-    success: bool | None
+    success: bool
     latency_ms: float | None
     error_message: str | None
 
@@ -44,13 +45,15 @@ class LatencyTestResult:
 @dataclass
 class LatencyTestGroupResult:
     start_time: str | None
-    end_time: str | None
+    end_time: str
     time_needed_sec: float | None
-    any_success: bool | None
-    group_success: bool | None
-    test_results: list[LatencyTestResult] = field(default_factory=list)
-    
-    
+    any_success: bool
+    group_success: bool
+    test_results: list[LatencyTestResult] = field(
+        default_factory=lambda: list[LatencyTestResult]()
+    )
+
+
 @dataclass
 class OutageDetectorResult:
     connection_state: str
@@ -61,8 +64,8 @@ class OutageDetectorResult:
     outage_duration_sec: float | None
     outage_started_group_id: int | None
     outage_ended_group_id: int | None
-    
-    
+
+
 @dataclass
 class LogEntry:
     date_time: str
@@ -72,4 +75,3 @@ class LogEntry:
     related_object_type: str | None
     related_object_id: int | None
     details_json: str | None
-    

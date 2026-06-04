@@ -1,13 +1,14 @@
 from runner import Runner
 from config_manager import ConfigManager
+from app_config import AppConfig
 from database_manager import DatabaseManager
 from outage_detector import OutageDetector
 from app_logger import AppLogger
-from models import LogType
+from models import LatencyTestGroupResult, LogType, OutageDetectorResult
 import time
 
 if __name__ == "__main__":
-    config = ConfigManager.load_config()
+    config: AppConfig = ConfigManager.load_config()
 
     database_manager = DatabaseManager(config.database_config.path)
 
@@ -23,9 +24,9 @@ if __name__ == "__main__":
     AppLogger.info(LogType.SYSTEM, "Initialization completed")
     try:
         while True:       
-            test_group = Runner.run_tests()
-            group_id = database_manager.save_latency_test_group_result(test_group)
-            detector_result = outage_detector.process_group_result(test_group, group_id)
+            test_group: LatencyTestGroupResult = Runner.run_tests()
+            group_id: int = database_manager.save_latency_test_group_result(test_group)
+            detector_result: OutageDetectorResult = outage_detector.process_group_result(test_group, group_id)
             AppLogger.debug(LogType.SYSTEM, detector_result.connection_state)
             AppLogger.info(LogType.SYSTEM,"End ping test")
             time.sleep(1)
