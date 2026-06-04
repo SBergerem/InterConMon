@@ -1,8 +1,11 @@
 from models import LogEntry, LogLevel, LogType
 import logging
-from database_manager import DatabaseManager
 from datetime import datetime
+from typing import TYPE_CHECKING
 import json
+
+if TYPE_CHECKING:
+    from database_manager import DatabaseManager
 
 
 class AppLogger:
@@ -73,6 +76,7 @@ class AppLogger:
         log_level: LogLevel,
         log_type: LogType,
         message: str,
+        function_name: str,
         related_object_type: str | None = None,
         related_object_id: int | None = None,
         details: dict[str, object] | None = None,
@@ -89,12 +93,16 @@ class AppLogger:
                     cls._logger.critical(f"[{log_type.value}] {message}")
                 case LogLevel.DEBUG:
                     cls._logger.debug(f"[{log_type.value}] {message}")
+                case LogLevel.EXTENDED_DEBUG:
+                    cls._logger.debug(f"(extended) [{log_type.value}] {message}")
+                case LogLevel.DETAILED_DEBUG:
+                    cls._logger.debug(f"(detailed) [{log_type.value}] {message}")
 
         if cls._database_manager is None:
             return
 
         if cls._is_database_logging_allowed(log_level):
-            details_json = None          
+            details_json = None
             if details is not None:
                 details_json = json.dumps(details, ensure_ascii=False)
 
@@ -105,6 +113,7 @@ class AppLogger:
                         log_level,
                         log_type,
                         message,
+                        function_name,
                         related_object_type,
                         related_object_id,
                         details_json,
@@ -118,6 +127,7 @@ class AppLogger:
         cls,
         log_type: LogType,
         message: str,
+        function_name: str,
         related_object_type: str | None = None,
         related_object_id: int | None = None,
         details: dict[str, object] | None = None,
@@ -126,6 +136,47 @@ class AppLogger:
             LogLevel.DEBUG,
             log_type,
             message,
+            function_name,
+            related_object_type,
+            related_object_id,
+            details,
+        )
+
+    @classmethod
+    def extended_debug(
+        cls,
+        log_type: LogType,
+        message: str,
+        function_name: str,
+        related_object_type: str | None = None,
+        related_object_id: int | None = None,
+        details: dict[str, object] | None = None,
+    ) -> None:
+        cls._log(
+            LogLevel.EXTENDED_DEBUG,
+            log_type,
+            message,
+            function_name,
+            related_object_type,
+            related_object_id,
+            details,
+        )
+
+    @classmethod
+    def detailed_debug(
+        cls,
+        log_type: LogType,
+        message: str,
+        function_name: str,
+        related_object_type: str | None = None,
+        related_object_id: int | None = None,
+        details: dict[str, object] | None = None,
+    ) -> None:
+        cls._log(
+            LogLevel.DETAILED_DEBUG,
+            log_type,
+            message,
+            function_name,
             related_object_type,
             related_object_id,
             details,
@@ -136,6 +187,7 @@ class AppLogger:
         cls,
         log_type: LogType,
         message: str,
+        function_name: str,
         related_object_type: str | None = None,
         related_object_id: int | None = None,
         details: dict[str, object] | None = None,
@@ -144,6 +196,7 @@ class AppLogger:
             LogLevel.INFO,
             log_type,
             message,
+            function_name,
             related_object_type,
             related_object_id,
             details,
@@ -154,6 +207,7 @@ class AppLogger:
         cls,
         log_type: LogType,
         message: str,
+        function_name: str,
         related_object_type: str | None = None,
         related_object_id: int | None = None,
         details: dict[str, object] | None = None,
@@ -162,6 +216,7 @@ class AppLogger:
             LogLevel.WARNING,
             log_type,
             message,
+            function_name,
             related_object_type,
             related_object_id,
             details,
@@ -172,6 +227,7 @@ class AppLogger:
         cls,
         log_type: LogType,
         message: str,
+        function_name: str,
         related_object_type: str | None = None,
         related_object_id: int | None = None,
         details: dict[str, object] | None = None,
@@ -180,6 +236,7 @@ class AppLogger:
             LogLevel.ERROR,
             log_type,
             message,
+            function_name,
             related_object_type,
             related_object_id,
             details,
@@ -190,6 +247,7 @@ class AppLogger:
         cls,
         log_type: LogType,
         message: str,
+        function_name: str,
         related_object_type: str | None = None,
         related_object_id: int | None = None,
         details: dict[str, object] | None = None,
@@ -198,6 +256,7 @@ class AppLogger:
             LogLevel.CRITICAL,
             log_type,
             message,
+            function_name,
             related_object_type,
             related_object_id,
             details,
