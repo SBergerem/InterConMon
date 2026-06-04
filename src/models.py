@@ -22,6 +22,7 @@ class LogType(Enum):
     DATABASE = "database"
     OUTAGE = "outage"
     CONFIG = "config"
+    SETTINGS = "settings"
     WEB = "web"
     EXPORT = "export"
     SECURITY = "security"
@@ -77,6 +78,14 @@ class LogEntry:
     log_type: LogType
     log_message: str
     function_name: str
+    class_name: str
     related_object_type: str | None
     related_object_id: int | None
     details_json: str | None
+
+@dataclass 
+class Setting:
+    settings_name: str
+    settings_json: str
+    
+

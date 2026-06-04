@@ -5,7 +5,6 @@ from models import LatencyTestResult, LatencyTestGroupResult, LogType
 from app_logger import AppLogger
 
 
-
 class Runner:
     _network_checker = None
 
@@ -17,11 +16,12 @@ class Runner:
         AppLogger.extended_debug(
             LogType.SCAN,
             "Starting latency tests",
+            "Runner",
             "_run_latency_tests",
             details={"targets": targets},
         )
 
-        start = time.perf_counter()
+        start: float = time.perf_counter()
 
         group_result = LatencyTestGroupResult(
             start_time=datetime.now().isoformat(),
@@ -50,6 +50,7 @@ class Runner:
         AppLogger.extended_debug(
             LogType.SCAN,
             "Ended latency tests",
+            "Runner",
             "_run_latency_tests",
             details={
                 "targets": targets,

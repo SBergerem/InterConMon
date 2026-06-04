@@ -16,6 +16,7 @@ class NetworkChecker:
         AppLogger.detailed_debug(
             LogType.SCAN,
             "Starting ping test",
+            "NetworkChecker",
             "test_latency",
             details={"target": target},
         )
@@ -43,6 +44,7 @@ class NetworkChecker:
                     AppLogger.error(
                         LogType.SCAN,
                         result.error_message,
+                        "NetworkChecker",
                         "test_latency",
                         details={"target": target, "ping_result": latency},
                     )
@@ -78,6 +80,7 @@ class NetworkChecker:
                         AppLogger.warning(
                             LogType.SCAN,
                             result.error_message,
+                            "NetworkChecker",
                             "test_latency",
                             details={"target": target, "stdout": ping_result.stdout},
                         )
@@ -92,6 +95,7 @@ class NetworkChecker:
                     AppLogger.error(
                         LogType.SCAN,
                         result.error_message,
+                        "NetworkChecker",
                         "test_latency",
                         details={
                             "target": target,
@@ -104,6 +108,7 @@ class NetworkChecker:
                 AppLogger.error(
                     LogType.SCAN,
                     result.error_message,
+                    "NetworkChecker",
                     "test_latency",
                     details={"target": target},
                 )
@@ -114,6 +119,7 @@ class NetworkChecker:
             AppLogger.error(
                 LogType.SCAN,
                 result.error_message,
+                "NetworkChecker",
                 "test_latency",
                 details={"target": target},
             )
@@ -121,6 +127,7 @@ class NetworkChecker:
         AppLogger.detailed_debug(
             LogType.SCAN,
             "Ended ping test",
+            "NetworkChecker",
             "test_latency",
             details={
                 "target": target,

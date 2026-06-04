@@ -1,7 +1,7 @@
 from app_start_config import AppStartConfig
 from pathlib import Path
 import json
-from app_logger import AppLogger 
+from app_logger import AppLogger
 from models import LogType
 
 
@@ -25,15 +25,19 @@ class ConfigManager:
         app_config = AppStartConfig()
 
         with open(cls._file_path, "r", encoding="utf-8") as file:
-            app_config.set_config_from_json(json.load(file))
+            app_config.set_config_from_dict(json.load(file))
 
-        AppLogger.info(LogType.CONFIG, "App start config loaded", "load_config")
+        AppLogger.info(
+            LogType.CONFIG, "App start config loaded", "ConfigManager", "load_config"
+        )
 
         return app_config
 
     @classmethod
     def save_config(cls, config: AppStartConfig) -> None:
         with open(cls._file_path, "w", encoding="utf-8") as file:
-            json.dump(config.get_config_as_json(), file, indent=4)
-            
-        AppLogger.info(LogType.CONFIG, "App start config saved", "save_config")
+            json.dump(config.get_config_as_dict(), file, indent=4)
+
+        AppLogger.info(
+            LogType.CONFIG, "App start config saved", "ConfigManager", "save_config"
+        )

@@ -6,10 +6,10 @@ class DatabaseConfig:
     def __init__(self) -> None:
         self.path: str = "./data/interconmon.db"
 
-    def get_config_as_json(self) -> dict[str, object]:
+    def get_config_as_dict(self) -> dict[str, object]:
         return {"path": self.path}
 
-    def set_config_from_json(self, config: dict[str, object]) -> None:
+    def set_config_from_dict(self, config: dict[str, object]) -> None:
         if not isinstance(config["path"], str):
             raise ValueError("Database path must be a string")
 
@@ -21,10 +21,10 @@ class EncryptionConfig:
     def __init__(self) -> None:
         self.secret_path: str = "./config/secret.key"
 
-    def get_config_as_json(self) -> dict[str, str]:
+    def get_config_as_dict(self) -> dict[str, str]:
         return {"secret_path": self.secret_path}
 
-    def set_config_from_json(self, config: dict[str, str]) -> None:
+    def set_config_from_dict(self, config: dict[str, str]) -> None:
         self.secret_path = config["secret_path"]
 
 
@@ -44,7 +44,7 @@ class LogConfig:
             LogLevel.CRITICAL,
         ]
 
-    def get_config_as_json(self) -> dict[str, list[str]]:
+    def get_config_as_dict(self) -> dict[str, list[str]]:
         return {
             "enabled_console_log_levels": [
                 level.value for level in self.enabled_console_log_levels
@@ -54,7 +54,7 @@ class LogConfig:
             ],
         }
 
-    def set_config_from_json(self, config: dict[str, object]) -> None:
+    def set_config_from_dict(self, config: dict[str, object]) -> None:
         console_levels: list[str] = cast(
             list[str], config["enabled_console_log_levels"]
         )
@@ -78,16 +78,16 @@ class AppStartConfig:
         self.encryption_config = EncryptionConfig()
         self.log_config = LogConfig()
 
-    def get_config_as_json(self) -> dict[str, object]:
+    def get_config_as_dict(self) -> dict[str, object]:
         return {
-            "encryption": self.encryption_config.get_config_as_json(),
-            "database": self.database_config.get_config_as_json(),
-            "logs": self.log_config.get_config_as_json(),
+            "encryption": self.encryption_config.get_config_as_dict(),
+            "database": self.database_config.get_config_as_dict(),
+            "logs": self.log_config.get_config_as_dict(),
         }
 
-    def set_config_from_json(self, config: dict[str, dict[str, object]]) -> None:
-        self.encryption_config.set_config_from_json(
+    def set_config_from_dict(self, config: dict[str, dict[str, object]]) -> None:
+        self.encryption_config.set_config_from_dict(
             cast(dict[str, str], config["encryption"])
         )
-        self.database_config.set_config_from_json(config["database"])
-        self.log_config.set_config_from_json(config["logs"])
+        self.database_config.set_config_from_dict(config["database"])
+        self.log_config.set_config_from_dict(config["logs"])

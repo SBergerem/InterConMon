@@ -28,6 +28,7 @@ class OutageDetector:
         AppLogger.extended_debug(
             LogType.OUTAGE,
             "Started outage check",
+            "OutageDetector",
             "process_group_result",
             related_object_type="LatencyTestGroupResult",
             related_object_id=group_id,
@@ -81,6 +82,7 @@ class OutageDetector:
         AppLogger.extended_debug(
             LogType.OUTAGE,
             "Ended outage checkt",
+            "OutageDetector",
             "process_group_result",
             related_object_type="LatencyTestGroupResult",
             related_object_id=group_id,

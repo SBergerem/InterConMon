@@ -10,7 +10,7 @@ class EncryptionManager:
     def _ensure_key_exists(self) -> None:
         self._key_path.parent.mkdir(parents=True, exist_ok=True)
         if not self._key_path.exists():
-            key = Fernet.generate_key()
+            key: bytes = Fernet.generate_key()
 
             with open(self._key_path, "wb") as file:
                 file.write(key)
@@ -28,7 +28,7 @@ class EncryptionManager:
         return fernet.encrypt(decrypted_text.encode("utf-8")).decode("utf-8")
 
     def decrypt_text(self, encrypted_text: str) -> str:
-        key = self._load_key()
+        key: bytes = self._load_key()
 
         fernet = Fernet(key)
         return fernet.decrypt(encrypted_text.encode("utf-8")).decode("utf-8")

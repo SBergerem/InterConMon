@@ -5,6 +5,7 @@ from logging import Logger, StreamHandler
 from datetime import datetime
 import json
 from typing import TYPE_CHECKING, TextIO
+from sqlite3 import Cursor
 
 if TYPE_CHECKING:
     from database_manager import DatabaseManager
@@ -78,10 +79,12 @@ class AppLogger:
         log_level: LogLevel,
         log_type: LogType,
         message: str,
+        class_name: str,
         function_name: str,
         related_object_type: str | None = None,
         related_object_id: int | None = None,
         details: dict[str, object] | None = None,
+        outer_cursor: Cursor | None = None,
     ) -> None:
         if cls._is_console_logging_allowed(log_level):
             match log_level:
@@ -94,11 +97,17 @@ class AppLogger:
                 case LogLevel.CRITICAL:
                     cls._logger.critical(f"[{log_type.value}] {message}")
                 case LogLevel.DEBUG:
-                    cls._logger.debug(f"[{log_type.value}] {message}")
+                    cls._logger.debug(
+                        f"[{log_type.value}] (Class: {class_name}) (Function: {function_name}) {message}"
+                    )
                 case LogLevel.EXTENDED_DEBUG:
-                    cls._logger.debug(f"(extended) [{log_type.value}] {message}")
+                    cls._logger.debug(
+                        f"(extended) [{log_type.value}] (Class: {class_name}) (Function: {function_name}) {message}"
+                    )
                 case LogLevel.DETAILED_DEBUG:
-                    cls._logger.debug(f"(detailed) [{log_type.value}] {message}")
+                    cls._logger.debug(
+                        f"(detailed) [{log_type.value}] (Class: {class_name}) (Function: {function_name}) {message}"
+                    )
 
         if cls._database_manager is None:
             return
@@ -115,11 +124,13 @@ class AppLogger:
                         log_level,
                         log_type,
                         message,
+                        class_name,
                         function_name,
                         related_object_type,
                         related_object_id,
                         details_json,
-                    )
+                    ),
+                    outer_cursor=outer_cursor,
                 )
             except Exception as ex:
                 cls._logger.error(f"Could not write log entry to database: {ex}")
@@ -129,19 +140,23 @@ class AppLogger:
         cls,
         log_type: LogType,
         message: str,
+        class_name: str,
         function_name: str,
         related_object_type: str | None = None,
         related_object_id: int | None = None,
         details: dict[str, object] | None = None,
+        outer_cursor: Cursor | None = None,
     ) -> None:
         cls._log(
             LogLevel.DEBUG,
             log_type,
             message,
+            class_name,
             function_name,
             related_object_type,
             related_object_id,
             details,
+            outer_cursor,
         )
 
     @classmethod
@@ -149,19 +164,23 @@ class AppLogger:
         cls,
         log_type: LogType,
         message: str,
+        class_name: str,
         function_name: str,
         related_object_type: str | None = None,
         related_object_id: int | None = None,
         details: dict[str, object] | None = None,
+        outer_cursor: Cursor | None = None,
     ) -> None:
         cls._log(
             LogLevel.EXTENDED_DEBUG,
             log_type,
             message,
+            class_name,
             function_name,
             related_object_type,
             related_object_id,
             details,
+            outer_cursor,
         )
 
     @classmethod
@@ -169,19 +188,23 @@ class AppLogger:
         cls,
         log_type: LogType,
         message: str,
+        class_name: str,
         function_name: str,
         related_object_type: str | None = None,
         related_object_id: int | None = None,
         details: dict[str, object] | None = None,
+        outer_cursor: Cursor | None = None,
     ) -> None:
         cls._log(
             LogLevel.DETAILED_DEBUG,
             log_type,
             message,
+            class_name,
             function_name,
             related_object_type,
             related_object_id,
             details,
+            outer_cursor,
         )
 
     @classmethod
@@ -189,19 +212,23 @@ class AppLogger:
         cls,
         log_type: LogType,
         message: str,
+        class_name: str,
         function_name: str,
         related_object_type: str | None = None,
         related_object_id: int | None = None,
         details: dict[str, object] | None = None,
+        outer_cursor: Cursor | None = None,
     ) -> None:
         cls._log(
             LogLevel.INFO,
             log_type,
             message,
+            class_name,
             function_name,
             related_object_type,
             related_object_id,
             details,
+            outer_cursor,
         )
 
     @classmethod
@@ -209,19 +236,23 @@ class AppLogger:
         cls,
         log_type: LogType,
         message: str,
+        class_name: str,
         function_name: str,
         related_object_type: str | None = None,
         related_object_id: int | None = None,
         details: dict[str, object] | None = None,
+        outer_cursor: Cursor | None = None,
     ) -> None:
         cls._log(
             LogLevel.WARNING,
             log_type,
             message,
+            class_name,
             function_name,
             related_object_type,
             related_object_id,
             details,
+            outer_cursor,
         )
 
     @classmethod
@@ -229,19 +260,23 @@ class AppLogger:
         cls,
         log_type: LogType,
         message: str,
+        class_name: str,
         function_name: str,
         related_object_type: str | None = None,
         related_object_id: int | None = None,
         details: dict[str, object] | None = None,
+        outer_cursor: Cursor | None = None,
     ) -> None:
         cls._log(
             LogLevel.ERROR,
             log_type,
             message,
+            class_name,
             function_name,
             related_object_type,
             related_object_id,
             details,
+            outer_cursor,
         )
 
     @classmethod
@@ -249,17 +284,21 @@ class AppLogger:
         cls,
         log_type: LogType,
         message: str,
+        class_name: str,
         function_name: str,
         related_object_type: str | None = None,
         related_object_id: int | None = None,
         details: dict[str, object] | None = None,
+        outer_cursor: Cursor | None = None,
     ) -> None:
         cls._log(
             LogLevel.CRITICAL,
             log_type,
             message,
+            class_name,
             function_name,
             related_object_type,
             related_object_id,
             details,
+            outer_cursor,
         )

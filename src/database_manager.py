@@ -1,9 +1,13 @@
 from pathlib import Path
 import sqlite3
 from sqlite3 import Cursor
+from typing import Any
 from outage_detector import OutageChangeState
 from models import LatencyTestGroupResult, OutageDetectorResult, LogEntry, LogType
 from app_logger import AppLogger
+import json
+from datetime import datetime
+from exceptions import DatabaseConnectionError
 
 
 class DatabaseManager:
@@ -25,32 +29,97 @@ class DatabaseManager:
             self._connection = None
 
     def _log_statement(
-        self, function_name: str, details: dict[str, object] | None = None
+        self,
+        function_name: str,
+        outer_cursor: Cursor,
+        details: dict[str, object] | None = None,
     ) -> None:
         AppLogger.extended_debug(
             LogType.DATABASE,
             "Executing SQL Statement",
+            "DatabaseManager",
             function_name,
             details=details,
+            outer_cursor=outer_cursor,
         )
 
-    def initialize_database(self) -> None:
+    def _check_for_existing_tuple(
+        self,
+        table_name: str,
+        column_name: str,
+        primary_key_value: str | int,
+        outer_cursor: Cursor | None = None,
+    ) -> bool:
         try:
-            cursor: Cursor = self._open_connection()
+            if outer_cursor is None:
+                cursor: Cursor = self._open_connection()
+            else:
+                cursor = outer_cursor
 
             AppLogger.debug(
-                LogType.DATABASE, "Starting SQL Transaction", "initialize_database"
+                LogType.DATABASE,
+                "Starting SQL Transaction",
+                "DatabaseManager",
+                "_check_for_existing_tuple",
             )
 
             if self._connection is None:
                 AppLogger.error(
                     LogType.DATABASE,
                     "No connection to database",
+                    "DatabaseManager",
+                    "_check_for_existing_tuple",
+                )
+                return False
+
+            sql: str = f"""
+                SELECT 1 FROM {table_name} WHERE {column_name} = ? LIMIT 1
+            """
+
+            params: tuple[str | int] = (primary_key_value,)
+
+            cursor.execute(sql, params)
+            self._log_statement(
+                "_check_for_existing_tuple",
+                cursor,
+                {"sql": sql, "params": params},
+            )
+
+            return cursor.fetchone() is not None
+        except Exception as ex:
+            AppLogger.error(
+                LogType.DATABASE,
+                str(ex),
+                "DatabaseManager",
+                "_check_for_existing_tuple",
+            )
+
+            raise ex
+        finally:
+            if outer_cursor is None:
+                self._close_connection()
+
+    def initialize_database(self) -> None:
+        try:
+            cursor: Cursor = self._open_connection()
+
+            AppLogger.debug(
+                LogType.DATABASE,
+                "Starting SQL Transaction",
+                "DatabaseManager",
+                "initialize_database",
+            )
+
+            if self._connection is None:
+                AppLogger.error(
+                    LogType.DATABASE,
+                    "No connection to database",
+                    "DatabaseManager",
                     "initialize_database",
                 )
                 return
 
-            sql = """
+            sql: str = """
                 CREATE TABLE IF NOT EXISTS latency_test_groups(
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     start_time TEXT NOT NULL,
@@ -63,6 +132,7 @@ class DatabaseManager:
             cursor.execute(sql)
             self._log_statement(
                 "initialize_database",
+                cursor,
                 {"sql": sql, "params": {}},
             )
 
@@ -83,6 +153,7 @@ class DatabaseManager:
             cursor.execute(sql)
             self._log_statement(
                 "initialize_database",
+                cursor,
                 {"sql": sql, "params": {}},
             )
 
@@ -102,6 +173,7 @@ class DatabaseManager:
             cursor.execute(sql)
             self._log_statement(
                 "initialize_database",
+                cursor,
                 {"sql": sql, "params": {}},
             )
 
@@ -120,16 +192,37 @@ class DatabaseManager:
             cursor.execute(sql)
             self._log_statement(
                 "initialize_database",
+                cursor,
+                {"sql": sql, "params": {}},
+            )
+
+            sql = """
+                CREATE TABLE IF NOT EXISTS app_settings(
+                    settings_name TEXT PRIMARY KEY,
+                    settings_json TEXT NOT NULL,
+                    changed_at TEXT NOT NULL
+                )
+            """
+            cursor.execute(sql)
+            self._log_statement(
+                "initialize_database",
+                cursor,
                 {"sql": sql, "params": {}},
             )
 
             self._connection.commit()
 
             AppLogger.debug(
-                LogType.DATABASE, "Committing SQL Statements", "initialize_database"
+                LogType.DATABASE,
+                "Committing SQL Statements",
+                "DatabaseManager",
+                "initialize_database",
             )
             AppLogger.debug(
-                LogType.DATABASE, "Database initialized", "initialize_database"
+                LogType.DATABASE,
+                "Database initialized",
+                "DatabaseManager",
+                "initialize_database",
             )
         finally:
             self._close_connection()
@@ -145,6 +238,7 @@ class DatabaseManager:
             AppLogger.debug(
                 LogType.DATABASE,
                 "Starting SQL Transaction",
+                "DatabaseManager",
                 "save_latency_test_group_result",
             )
 
@@ -152,6 +246,7 @@ class DatabaseManager:
                 AppLogger.error(
                     LogType.DATABASE,
                     "No connection to database",
+                    "DatabaseManager",
                     "save_latency_test_group_result",
                 )
                 return -1
@@ -172,6 +267,7 @@ class DatabaseManager:
             cursor.execute(sql, group_params)
             self._log_statement(
                 "save_latency_test_group_result",
+                cursor,
                 {"sql": sql, "params": group_params},
             )
 
@@ -183,7 +279,7 @@ class DatabaseManager:
                     VALUES (?, ?, ?, ?, ?, ?)                 
                 """
 
-                single_params: tuple[int, str, str, int, float|None, str|None] = (
+                single_params: tuple[int, str, str, int, float | None, str | None] = (
                     group_id,
                     single_test_result.date_time,
                     single_test_result.target,
@@ -195,6 +291,7 @@ class DatabaseManager:
                 cursor.execute(sql, single_params)
                 self._log_statement(
                     "save_latency_test_group_result",
+                    cursor,
                     {"sql": sql, "params": single_params},
                 )
 
@@ -204,6 +301,7 @@ class DatabaseManager:
                 LogType.DATABASE,
                 "Committing SQL Statements",
                 "save_latency_test_group_result",
+                "DatabaseManager",
             )
         except Exception as ex:
             if self._connection is not None:
@@ -213,6 +311,7 @@ class DatabaseManager:
                 LogType.DATABASE,
                 str(ex),
                 "save_latency_test_group_result",
+                "DatabaseManager",
             )
 
             raise ex
@@ -231,6 +330,7 @@ class DatabaseManager:
             AppLogger.debug(
                 LogType.DATABASE,
                 "Starting SQL Transaction",
+                "DatabaseManager",
                 "save_outage",
             )
 
@@ -238,6 +338,7 @@ class DatabaseManager:
                 AppLogger.error(
                     LogType.DATABASE,
                     "No connection to database",
+                    "DatabaseManager",
                     "save_outage",
                 )
                 return -1
@@ -260,13 +361,17 @@ class DatabaseManager:
             cursor.execute(sql, params)
             self._log_statement(
                 "save_outage",
+                cursor,
                 {"sql": sql, "params": params},
             )
 
             self._connection.commit()
 
             AppLogger.debug(
-                LogType.DATABASE, "Committing SQL Statements", "save_outage"
+                LogType.DATABASE,
+                "Committing SQL Statements",
+                "DatabaseManager",
+                "save_outage",
             )
 
             return cursor.lastrowid if cursor.lastrowid is not None else -1
@@ -274,20 +379,21 @@ class DatabaseManager:
             if self._connection is not None:
                 self._connection.rollback()
 
-            AppLogger.error(
-                LogType.DATABASE,
-                str(ex),
-                "save_outage",
-            )
+            AppLogger.error(LogType.DATABASE, str(ex), "DatabaseManager", "save_outage")
 
             raise ex
         finally:
             self._close_connection()
 
     # Can't log here, because it would result in log looping
-    def save_log_entry(self, log_entry: LogEntry) -> None:
+    def save_log_entry(
+        self, log_entry: LogEntry, outer_cursor: Cursor | None = None
+    ) -> None:
         try:
-            cursor: Cursor = self._open_connection()
+            if outer_cursor is None:
+                cursor: Cursor = self._open_connection()
+            else:
+                cursor = outer_cursor
 
             if self._connection is None:
                 return
@@ -309,10 +415,116 @@ class DatabaseManager:
 
             cursor.execute(sql, params)
 
+            if outer_cursor is None:
+                self._connection.commit()
+        except Exception as ex:
+            if self._connection is not None:
+                self._connection.rollback()
+            raise ex
+        finally:
+            if outer_cursor is None:
+                self._close_connection()
+
+    def save_settings(self, tuples_to_save: list[tuple[str, object]]) -> None:
+        try:
+            cursor: Cursor = self._open_connection()
+
+            if self._connection is None:
+                return
+
+            for setting_name, settings in tuples_to_save:
+                if self._check_for_existing_tuple(
+                    "app_settings", "settings_name", setting_name, cursor
+                ):
+                    sql = """
+                        UPDATE app_settings SET settings_json = ?, changed_at = ? WHERE settings_name = ?
+                    """
+
+                    params = (
+                        json.dumps(settings),
+                        datetime.now().isoformat(),
+                        setting_name,
+                    )
+
+                    cursor.execute(sql, params)
+                    self._log_statement(
+                        "save_settings",
+                        cursor,
+                        {"sql": sql, "params": params},
+                    )
+                else:
+                    sql = """
+                        INSERT INTO app_settings (settings_name, settings_json, changed_at)
+                        VALUES (?, ?, ?)
+                    """
+
+                    params = (
+                        setting_name,
+                        json.dumps(settings),
+                        datetime.now().isoformat(),
+                    )
+
+                    cursor.execute(sql, params)
+                    self._log_statement(
+                        "save_settings",
+                        cursor,
+                        {"sql": sql, "params": params},
+                    )
+
             self._connection.commit()
         except Exception as ex:
             if self._connection is not None:
                 self._connection.rollback()
+            raise ex
+        finally:
+            self._close_connection()
+
+    def load_settings(self) -> list[tuple[str, str]]:
+        try:
+            cursor: Cursor = self._open_connection()
+
+            AppLogger.debug(
+                LogType.DATABASE,
+                "Starting SQL Transaction",
+                "DatabaseManager",
+                "load_settings",
+            )
+
+            if self._connection is None:
+                AppLogger.error(
+                    LogType.DATABASE,
+                    "No connection to database",
+                    "DatabaseManager",
+                    "load_settings",
+                )
+                raise DatabaseConnectionError("No database connection available")
+
+            sql: str = f"""
+                SELECT * FROM app_settings
+            """
+
+            cursor.execute(sql)
+            self._log_statement(
+                "_check_for_existing_tuple",
+                cursor,
+                {"sql": sql, "params": {}},
+            )
+
+            rows: list[Any] = cursor.fetchall()
+
+            result: list[tuple[str, str]] = []
+            for settings_name, settings_json in rows:
+                result.append((settings_name, settings_json))
+                
+            return result
+        except Exception as ex:
+            AppLogger.error(
+                LogType.DATABASE,
+                str(ex),
+                "DatabaseManager",
+                "_check_for_existing_tuple",
+            )
+
             raise ex
         finally:
             self._close_connection()
