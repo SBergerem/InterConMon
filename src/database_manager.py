@@ -1,6 +1,6 @@
 from pathlib import Path
 import sqlite3
-from sqlite3 import Cursor, Connection
+from sqlite3 import Cursor
 from outage_detector import OutageChangeState
 from models import LatencyTestGroupResult, OutageDetectorResult, LogEntry, LogType
 from app_logger import AppLogger
@@ -36,7 +36,7 @@ class DatabaseManager:
 
     def initialize_database(self) -> None:
         try:
-            cursor = self._open_connection()
+            cursor: Cursor = self._open_connection()
 
             AppLogger.debug(
                 LogType.DATABASE, "Starting SQL Transaction", "initialize_database"
@@ -161,7 +161,7 @@ class DatabaseManager:
                     VALUES (?, ?, ?, ?, ?)
             """
 
-            params = (
+            group_params: tuple[str | None, str, float | None, int, int] = (
                 latency_test_group_result.start_time,
                 latency_test_group_result.end_time,
                 latency_test_group_result.time_needed_sec,
@@ -169,10 +169,10 @@ class DatabaseManager:
                 int(latency_test_group_result.group_success),
             )
 
-            cursor.execute(sql, params)
+            cursor.execute(sql, group_params)
             self._log_statement(
                 "save_latency_test_group_result",
-                {"sql": sql, "params": params},
+                {"sql": sql, "params": group_params},
             )
 
             group_id = cursor.lastrowid if cursor.lastrowid is not None else -1
@@ -183,7 +183,7 @@ class DatabaseManager:
                     VALUES (?, ?, ?, ?, ?, ?)                 
                 """
 
-                params = (
+                single_params: tuple[int, str, str, int, float|None, str|None] = (
                     group_id,
                     single_test_result.date_time,
                     single_test_result.target,
@@ -192,10 +192,10 @@ class DatabaseManager:
                     single_test_result.error_message,
                 )
 
-                cursor.execute(sql, params)
+                cursor.execute(sql, single_params)
                 self._log_statement(
                     "save_latency_test_group_result",
-                    {"sql": sql, "params": params},
+                    {"sql": sql, "params": single_params},
                 )
 
             self._connection.commit()
@@ -247,7 +247,9 @@ class DatabaseManager:
                 VALUES (?, ?, ?, ?, ?)
             """
 
-            params = (
+            params: tuple[
+                str | None, str | None, float | None, int | None, int | None
+            ] = (
                 outage_detection_result.outage_start_time,
                 outage_detection_result.outage_end_time,
                 outage_detection_result.outage_duration_sec,
@@ -262,9 +264,11 @@ class DatabaseManager:
             )
 
             self._connection.commit()
-            
-            AppLogger.debug(LogType.DATABASE, "Committing SQL Statements", "save_outage")
-            
+
+            AppLogger.debug(
+                LogType.DATABASE, "Committing SQL Statements", "save_outage"
+            )
+
             return cursor.lastrowid if cursor.lastrowid is not None else -1
         except Exception as ex:
             if self._connection is not None:
@@ -293,7 +297,7 @@ class DatabaseManager:
                    VALUES (?, ?, ?, ?, ?, ?, ?)
             """
 
-            params = (
+            params: tuple[str, str, str, str, str | None, int | None, str | None] = (
                 log_entry.date_time,
                 log_entry.log_level.value,
                 log_entry.log_type.value,

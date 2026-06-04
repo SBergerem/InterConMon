@@ -1,6 +1,6 @@
 from runner import Runner
 from config_manager import ConfigManager
-from app_config import AppConfig
+from app_start_config import AppStartConfig
 from database_manager import DatabaseManager
 from outage_detector import OutageDetector
 from app_logger import AppLogger
@@ -8,7 +8,7 @@ from models import LogType, OutageChangeState
 import time
 
 if __name__ == "__main__":
-    config: AppConfig = ConfigManager.load_config()
+    config: AppStartConfig = ConfigManager.load_config()
 
     database_manager = DatabaseManager(config.database_config.path)
 

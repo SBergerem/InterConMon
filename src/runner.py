@@ -35,7 +35,7 @@ class Runner:
         success_list: list[bool] = []
 
         for target in targets:
-            test_result = cls._network_checker.test_latency(target)
+            test_result: LatencyTestResult = cls._network_checker.test_latency(target)
             group_result.test_results.append(test_result)
             success_list.append(test_result.success)
 
@@ -43,8 +43,8 @@ class Runner:
         group_result.group_success = (len(success_list) > 0) and all(success_list)
         group_result.end_time = datetime.now().isoformat()
 
-        end = time.perf_counter()
-        duration_secs = end - start
+        end: float = time.perf_counter()
+        duration_secs: float = end - start
         group_result.time_needed_sec = duration_secs
 
         AppLogger.extended_debug(
@@ -63,5 +63,5 @@ class Runner:
 
     @classmethod
     def run_tests(cls) -> LatencyTestGroupResult:
-        targets = ["1.1.1.1"]
+        targets: list[str] = ["1.1.1.1"]
         return cls._run_latency_tests(targets)

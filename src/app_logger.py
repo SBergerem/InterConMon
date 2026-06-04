@@ -1,23 +1,25 @@
+from database_manager import DatabaseManager
 from models import LogEntry, LogLevel, LogType
 import logging
+from logging import Logger, StreamHandler
 from datetime import datetime
-from typing import TYPE_CHECKING
 import json
+from typing import TYPE_CHECKING, TextIO
 
 if TYPE_CHECKING:
     from database_manager import DatabaseManager
 
 
 class AppLogger:
-    _logger = logging.getLogger("InterConMon")
-    _database_manager = None
-    _enabled_console_log_levels = {
+    _logger: Logger = logging.getLogger("InterConMon")
+    _database_manager: DatabaseManager | None = None
+    _enabled_console_log_levels: set[LogLevel] = {
         LogLevel.INFO,
         LogLevel.WARNING,
         LogLevel.ERROR,
         LogLevel.CRITICAL,
     }
-    _enabled_database_log_levels = {
+    _enabled_database_log_levels: set[LogLevel] = {
         LogLevel.INFO,
         LogLevel.WARNING,
         LogLevel.ERROR,
@@ -40,7 +42,7 @@ class AppLogger:
         if cls._logger.handlers:
             return
 
-        console_handler = logging.StreamHandler()
+        console_handler: StreamHandler[TextIO] = logging.StreamHandler()
         console_handler.setLevel(logging.DEBUG)
 
         formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
@@ -102,7 +104,7 @@ class AppLogger:
             return
 
         if cls._is_database_logging_allowed(log_level):
-            details_json = None
+            details_json: str | None = None
             if details is not None:
                 details_json = json.dumps(details, ensure_ascii=False)
 

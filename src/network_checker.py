@@ -3,7 +3,8 @@ import subprocess
 import os
 import re
 from datetime import datetime
-from ping3 import ping
+from typing import Any, Literal
+from ping3 import ping  # type: ignore[import]
 from models import LatencyTestResult, LogType
 from app_logger import AppLogger
 
@@ -28,10 +29,10 @@ class NetworkChecker:
         )
 
         try:
-            system = platform.system()
+            system: str = platform.system()
 
             if system == "Windows":
-                latency = ping(target, unit="ms")
+                latency: None | Any | Literal[False] = ping(target, unit="ms")
 
                 if isinstance(latency, (int, float)) and not isinstance(latency, bool):
                     result.success = True
@@ -61,7 +62,7 @@ class NetworkChecker:
                 )
 
                 if ping_result.returncode == 0:
-                    latency_text = re.search(
+                    latency_text: re.Match[str] | None = re.search(
                         r"time=\s*([0-9]+(?:\.[0-9]+)?)\s*ms", ping_result.stdout
                     )
 

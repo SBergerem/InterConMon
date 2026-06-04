@@ -15,13 +15,9 @@ class OutageChangeState(Enum):
 
 
 class LogType(Enum):
-<<<<<<< HEAD
-    UNKNOWN = "unknown"
-=======
     UNKNOWN = "unknown"    
     SCAN = "scan"
     GENERAL = "general"
->>>>>>> 1ce10c93f9b548dd2982a77df3a8f843a0bf31f8
     SYSTEM = "system"
     DATABASE = "database"
     OUTAGE = "outage"
@@ -57,7 +53,9 @@ class LatencyTestGroupResult:
     time_needed_sec: float | None
     any_success: bool
     group_success: bool
-    test_results: list[LatencyTestResult] = field(default_factory=list)
+    test_results: list[LatencyTestResult] = field(
+        default_factory=lambda: list[LatencyTestResult]()
+    )
     
     
 @dataclass

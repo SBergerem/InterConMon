@@ -32,7 +32,7 @@ class ConfigManager:
         return app_config
 
     @classmethod
-    def save_config(cls, config: AppConfig) -> None:
+    def save_config(cls, config: AppStartConfig) -> None:
         with open(cls._file_path, "w", encoding="utf-8") as file:
             json.dump(config.get_config_as_json(), file, indent=4)
             
