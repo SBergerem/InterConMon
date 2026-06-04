@@ -10,7 +10,7 @@ class AppSettingsManager:
         self.app_settings: AppSettings = AppSettings()
         self._database_manager: DatabaseManager = database_manager
 
-    def set_settings(self) -> None:
+    def load_settings(self) -> None:
         settings: list[tuple[str, str]] = self._database_manager.load_settings()
         
         for settings_name, settings_json in settings:
@@ -38,7 +38,7 @@ class AppSettingsManager:
                 )
                 raise ex
 
-    def get_settings(self) -> None:
+    def save_settings(self) -> None:
         try:
             settings: list[tuple[str, object]] = [
                 (

@@ -7,7 +7,11 @@ from models import LatencyTestGroupResult, OutageDetectorResult, LogEntry, LogTy
 from app_logger import AppLogger
 import json
 from datetime import datetime
-from exceptions import DatabaseConnectionError
+from exceptions import (
+    DatabaseConnectionException,
+    DBConIsNoneException,
+    DBOperationFailedException,
+)
 
 
 class DatabaseManager:
@@ -18,10 +22,16 @@ class DatabaseManager:
         self._connection: sqlite3.Connection | None = None
 
     def _open_connection(self) -> Cursor:
-        self._connection = sqlite3.connect(self._database_path)
-        cursor: Cursor = self._connection.cursor()
-        cursor.execute("PRAGMA foreign_keys = ON")
-        return cursor
+        cursor: Cursor | None = None
+        try:
+            self._connection = sqlite3.connect(self._database_path)
+            cursor = self._connection.cursor()
+            cursor.execute("PRAGMA foreign_keys = ON")
+            return cursor
+        except Exception:
+            raise DatabaseConnectionException(
+                "DatabaseManager", "_open_connection", True
+            )
 
     def _close_connection(self) -> None:
         if self._connection is not None:
@@ -61,16 +71,13 @@ class DatabaseManager:
                 "Starting SQL Transaction",
                 "DatabaseManager",
                 "_check_for_existing_tuple",
+                outer_cursor=cursor,
             )
 
             if self._connection is None:
-                AppLogger.error(
-                    LogType.DATABASE,
-                    "No connection to database",
-                    "DatabaseManager",
-                    "_check_for_existing_tuple",
+                raise DBConIsNoneException(
+                    "DatabaseManager", "_check_for_existing_tuple"
                 )
-                return False
 
             sql: str = f"""
                 SELECT 1 FROM {table_name} WHERE {column_name} = ? LIMIT 1
@@ -87,14 +94,9 @@ class DatabaseManager:
 
             return cursor.fetchone() is not None
         except Exception as ex:
-            AppLogger.error(
-                LogType.DATABASE,
-                str(ex),
-                "DatabaseManager",
-                "_check_for_existing_tuple",
+            raise DBOperationFailedException(
+                str(ex), "DatabaseManager", "_check_for_existing_tuple"
             )
-
-            raise ex
         finally:
             if outer_cursor is None:
                 self._close_connection()
@@ -108,16 +110,11 @@ class DatabaseManager:
                 "Starting SQL Transaction",
                 "DatabaseManager",
                 "initialize_database",
+                outer_cursor=cursor,
             )
 
             if self._connection is None:
-                AppLogger.error(
-                    LogType.DATABASE,
-                    "No connection to database",
-                    "DatabaseManager",
-                    "initialize_database",
-                )
-                return
+                raise DBConIsNoneException("DatabaseManager", "initialize_database")
 
             sql: str = """
                 CREATE TABLE IF NOT EXISTS latency_test_groups(
@@ -217,12 +214,18 @@ class DatabaseManager:
                 "Committing SQL Statements",
                 "DatabaseManager",
                 "initialize_database",
+                outer_cursor=cursor,
             )
             AppLogger.debug(
                 LogType.DATABASE,
                 "Database initialized",
                 "DatabaseManager",
                 "initialize_database",
+                outer_cursor=cursor,
+            )
+        except Exception as ex:
+            raise DBOperationFailedException(
+                str(ex), "DatabaseManager", "initialize_database"
             )
         finally:
             self._close_connection()
@@ -232,24 +235,22 @@ class DatabaseManager:
     ) -> int:
         group_id: int
 
+        cursor: Cursor | None = None
         try:
-            cursor: Cursor = self._open_connection()
+            cursor = self._open_connection()
 
             AppLogger.debug(
                 LogType.DATABASE,
                 "Starting SQL Transaction",
                 "DatabaseManager",
                 "save_latency_test_group_result",
+                outer_cursor=cursor,
             )
 
             if self._connection is None:
-                AppLogger.error(
-                    LogType.DATABASE,
-                    "No connection to database",
-                    "DatabaseManager",
-                    "save_latency_test_group_result",
+                raise DBConIsNoneException(
+                    "DatabaseManager", "save_latency_test_group_result"
                 )
-                return -1
 
             sql = """
                     INSERT INTO latency_test_groups (start_time, end_time, time_needed_sec, any_success, group_success) 
@@ -265,13 +266,14 @@ class DatabaseManager:
             )
 
             cursor.execute(sql, group_params)
+            
+            group_id = cursor.lastrowid if cursor.lastrowid is not None else -1
+            
             self._log_statement(
                 "save_latency_test_group_result",
                 cursor,
                 {"sql": sql, "params": group_params},
             )
-
-            group_id = cursor.lastrowid if cursor.lastrowid is not None else -1
 
             for single_test_result in latency_test_group_result.test_results:
                 sql = """
@@ -302,19 +304,15 @@ class DatabaseManager:
                 "Committing SQL Statements",
                 "save_latency_test_group_result",
                 "DatabaseManager",
+                outer_cursor=cursor,
             )
         except Exception as ex:
             if self._connection is not None:
                 self._connection.rollback()
 
-            AppLogger.error(
-                LogType.DATABASE,
-                str(ex),
-                "save_latency_test_group_result",
-                "DatabaseManager",
+            raise DBOperationFailedException(
+                str(ex), "DatabaseManager", "save_latency_test_group_result"
             )
-
-            raise ex
         finally:
             self._close_connection()
 
@@ -324,24 +322,20 @@ class DatabaseManager:
         if outage_detection_result.outage_change_state != OutageChangeState.ENDED.value:
             return -1
 
+        cursor: Cursor | None = None
         try:
-            cursor: Cursor = self._open_connection()
+            cursor = self._open_connection()
 
             AppLogger.debug(
                 LogType.DATABASE,
                 "Starting SQL Transaction",
                 "DatabaseManager",
                 "save_outage",
+                outer_cursor=cursor,
             )
 
             if self._connection is None:
-                AppLogger.error(
-                    LogType.DATABASE,
-                    "No connection to database",
-                    "DatabaseManager",
-                    "save_outage",
-                )
-                return -1
+                raise DBConIsNoneException("DatabaseManager", "save_outage")
 
             sql = """
                 INSERT INTO outages (start_time, end_time, duration_sec, started_group_id, ended_group_id)      
@@ -372,6 +366,7 @@ class DatabaseManager:
                 "Committing SQL Statements",
                 "DatabaseManager",
                 "save_outage",
+                outer_cursor=cursor,
             )
 
             return cursor.lastrowid if cursor.lastrowid is not None else -1
@@ -379,9 +374,7 @@ class DatabaseManager:
             if self._connection is not None:
                 self._connection.rollback()
 
-            AppLogger.error(LogType.DATABASE, str(ex), "DatabaseManager", "save_outage")
-
-            raise ex
+            raise DBOperationFailedException(str(ex), "DatabaseManager", "save_outage")
         finally:
             self._close_connection()
 
@@ -394,9 +387,8 @@ class DatabaseManager:
                 cursor: Cursor = self._open_connection()
             else:
                 cursor = outer_cursor
-
             if self._connection is None:
-                return
+                raise DBConIsNoneException("DatabaseManager", "save_log_entry")
 
             sql = """
                    INSERT INTO logs (date_time, log_level, log_type, log_message, related_object_type, related_object_id, details_json)        
@@ -420,7 +412,11 @@ class DatabaseManager:
         except Exception as ex:
             if self._connection is not None:
                 self._connection.rollback()
-            raise ex
+
+            raise DBOperationFailedException(
+                str(ex), "DatabaseManager", "save_log_entry"
+            )
+
         finally:
             if outer_cursor is None:
                 self._close_connection()
@@ -430,7 +426,7 @@ class DatabaseManager:
             cursor: Cursor = self._open_connection()
 
             if self._connection is None:
-                return
+                raise DBConIsNoneException("DatabaseManager", "save_settings")
 
             for setting_name, settings in tuples_to_save:
                 if self._check_for_existing_tuple(
@@ -475,56 +471,51 @@ class DatabaseManager:
         except Exception as ex:
             if self._connection is not None:
                 self._connection.rollback()
-            raise ex
+
+            raise DBOperationFailedException(
+                str(ex), "DatabaseManager", "save_settings"
+            )
         finally:
             self._close_connection()
 
     def load_settings(self) -> list[tuple[str, str]]:
+        cursor: Cursor | None = None
         try:
-            cursor: Cursor = self._open_connection()
+            cursor = self._open_connection()
 
             AppLogger.debug(
                 LogType.DATABASE,
                 "Starting SQL Transaction",
                 "DatabaseManager",
                 "load_settings",
+                outer_cursor=cursor,
             )
 
             if self._connection is None:
-                AppLogger.error(
-                    LogType.DATABASE,
-                    "No connection to database",
-                    "DatabaseManager",
-                    "load_settings",
-                )
-                raise DatabaseConnectionError("No database connection available")
+                raise DBConIsNoneException("DatabaseManager", "load_settings")
 
-            sql: str = f"""
-                SELECT * FROM app_settings
+            sql: str = """
+                SELECT settings_name, settings_json FROM app_settings
             """
 
             cursor.execute(sql)
+            rows: list[Any] = cursor.fetchall()
+
             self._log_statement(
                 "_check_for_existing_tuple",
                 cursor,
                 {"sql": sql, "params": {}},
             )
 
-            rows: list[Any] = cursor.fetchall()
-
             result: list[tuple[str, str]] = []
             for settings_name, settings_json in rows:
                 result.append((settings_name, settings_json))
-                
-            return result
-        except Exception as ex:
-            AppLogger.error(
-                LogType.DATABASE,
-                str(ex),
-                "DatabaseManager",
-                "_check_for_existing_tuple",
-            )
 
-            raise ex
+            return result
+
+        except Exception as ex:
+            raise DBOperationFailedException(
+                str(ex), "DatabaseManager", "load_settings"
+            )
         finally:
             self._close_connection()

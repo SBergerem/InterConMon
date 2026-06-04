@@ -1,12 +1,12 @@
-from dataclasses import dataclass
-
+from dataclasses import dataclass, field
 
 @dataclass
 class LatencyTestSettings:
-    targets: list[str] = []
+    targets: list[str] = field(default_factory=lambda: list[str]())
     interval_seconds: int = 3
-
 
 @dataclass
 class AppSettings:
-    latency_test_settings: LatencyTestSettings = LatencyTestSettings()
+    latency_test_settings: LatencyTestSettings = field(
+        default_factory=LatencyTestSettings
+    )

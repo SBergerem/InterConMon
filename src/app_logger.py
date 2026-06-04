@@ -1,4 +1,3 @@
-from database_manager import DatabaseManager
 from models import LogEntry, LogLevel, LogType
 import logging
 from logging import Logger, StreamHandler
@@ -85,17 +84,24 @@ class AppLogger:
         related_object_id: int | None = None,
         details: dict[str, object] | None = None,
         outer_cursor: Cursor | None = None,
+        skip_database: bool = False,
     ) -> None:
         if cls._is_console_logging_allowed(log_level):
             match log_level:
                 case LogLevel.INFO:
                     cls._logger.info(f"[{log_type.value}] {message}")
                 case LogLevel.WARNING:
-                    cls._logger.warning(f"[{log_type.value}] {message}")
+                    cls._logger.warning(
+                        f"[{log_type.value}] (Class: {class_name}) (Function: {function_name}) {message}"
+                    )
                 case LogLevel.ERROR:
-                    cls._logger.error(f"[{log_type.value}] {message}")
+                    cls._logger.error(
+                        f"[{log_type.value}] (Class: {class_name}) (Function: {function_name}) {message}"
+                    )
                 case LogLevel.CRITICAL:
-                    cls._logger.critical(f"[{log_type.value}] {message}")
+                    cls._logger.critical(
+                        f"[{log_type.value}] (Class: {class_name}) (Function: {function_name}) {message}"
+                    )
                 case LogLevel.DEBUG:
                     cls._logger.debug(
                         f"[{log_type.value}] (Class: {class_name}) (Function: {function_name}) {message}"
@@ -109,7 +115,7 @@ class AppLogger:
                         f"(detailed) [{log_type.value}] (Class: {class_name}) (Function: {function_name}) {message}"
                     )
 
-        if cls._database_manager is None:
+        if cls._database_manager is None or skip_database:
             return
 
         if cls._is_database_logging_allowed(log_level):
@@ -146,6 +152,7 @@ class AppLogger:
         related_object_id: int | None = None,
         details: dict[str, object] | None = None,
         outer_cursor: Cursor | None = None,
+        skip_database: bool = False,
     ) -> None:
         cls._log(
             LogLevel.DEBUG,
@@ -157,6 +164,7 @@ class AppLogger:
             related_object_id,
             details,
             outer_cursor,
+            skip_database,
         )
 
     @classmethod
@@ -170,6 +178,7 @@ class AppLogger:
         related_object_id: int | None = None,
         details: dict[str, object] | None = None,
         outer_cursor: Cursor | None = None,
+        skip_database: bool = False,
     ) -> None:
         cls._log(
             LogLevel.EXTENDED_DEBUG,
@@ -181,6 +190,7 @@ class AppLogger:
             related_object_id,
             details,
             outer_cursor,
+            skip_database,
         )
 
     @classmethod
@@ -194,6 +204,7 @@ class AppLogger:
         related_object_id: int | None = None,
         details: dict[str, object] | None = None,
         outer_cursor: Cursor | None = None,
+        skip_database: bool = False,
     ) -> None:
         cls._log(
             LogLevel.DETAILED_DEBUG,
@@ -205,6 +216,7 @@ class AppLogger:
             related_object_id,
             details,
             outer_cursor,
+            skip_database,
         )
 
     @classmethod
@@ -218,6 +230,7 @@ class AppLogger:
         related_object_id: int | None = None,
         details: dict[str, object] | None = None,
         outer_cursor: Cursor | None = None,
+        skip_database: bool = False,
     ) -> None:
         cls._log(
             LogLevel.INFO,
@@ -229,6 +242,7 @@ class AppLogger:
             related_object_id,
             details,
             outer_cursor,
+            skip_database,
         )
 
     @classmethod
@@ -242,6 +256,7 @@ class AppLogger:
         related_object_id: int | None = None,
         details: dict[str, object] | None = None,
         outer_cursor: Cursor | None = None,
+        skip_database: bool = False,
     ) -> None:
         cls._log(
             LogLevel.WARNING,
@@ -253,6 +268,7 @@ class AppLogger:
             related_object_id,
             details,
             outer_cursor,
+            skip_database,
         )
 
     @classmethod
@@ -266,6 +282,7 @@ class AppLogger:
         related_object_id: int | None = None,
         details: dict[str, object] | None = None,
         outer_cursor: Cursor | None = None,
+        skip_database: bool = False,
     ) -> None:
         cls._log(
             LogLevel.ERROR,
@@ -277,6 +294,7 @@ class AppLogger:
             related_object_id,
             details,
             outer_cursor,
+            skip_database,
         )
 
     @classmethod
@@ -290,6 +308,7 @@ class AppLogger:
         related_object_id: int | None = None,
         details: dict[str, object] | None = None,
         outer_cursor: Cursor | None = None,
+        skip_database: bool = False,
     ) -> None:
         cls._log(
             LogLevel.CRITICAL,
@@ -301,4 +320,5 @@ class AppLogger:
             related_object_id,
             details,
             outer_cursor,
+            skip_database,
         )

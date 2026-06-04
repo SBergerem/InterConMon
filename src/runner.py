@@ -6,10 +6,11 @@ from app_logger import AppLogger
 
 
 class Runner:
-    _network_checker = None
+    _network_checker: NetworkChecker | None = None
+    _targets: list[str] | None = None
 
     @classmethod
-    def _run_latency_tests(cls, targets: list[str]) -> LatencyTestGroupResult:
+    def _run_latency_tests(cls) -> LatencyTestGroupResult | None:
         if cls._network_checker is None:
             cls._network_checker = NetworkChecker()
 
@@ -18,7 +19,7 @@ class Runner:
             "Starting latency tests",
             "Runner",
             "_run_latency_tests",
-            details={"targets": targets},
+            details={"targets": cls._targets},
         )
 
         start: float = time.perf_counter()
@@ -32,9 +33,18 @@ class Runner:
             test_results=[],
         )
 
+        if cls._targets is None or cls._targets == []:
+            AppLogger.warning(
+                LogType.SCAN,
+                "No targets configured",
+                "Runner",
+                "_run_latency_tests",
+            )
+            return None
+
         success_list: list[bool] = []
 
-        for target in targets:
+        for target in cls._targets:
             test_result: LatencyTestResult = cls._network_checker.test_latency(target)
             group_result.test_results.append(test_result)
             success_list.append(test_result.success)
@@ -53,7 +63,7 @@ class Runner:
             "Runner",
             "_run_latency_tests",
             details={
-                "targets": targets,
+                "targets": cls._targets,
                 "any_success": group_result.any_success,
                 "group_success": group_result.group_success,
                 "time_needed_sec": group_result.time_needed_sec,
@@ -63,6 +73,9 @@ class Runner:
         return group_result
 
     @classmethod
-    def run_tests(cls) -> LatencyTestGroupResult:
-        targets: list[str] = ["1.1.1.1"]
-        return cls._run_latency_tests(targets)
+    def prepare(cls, targets: list[str]) -> None:
+        cls._targets = targets
+
+    @classmethod
+    def run_tests(cls) -> LatencyTestGroupResult | None:
+        return cls._run_latency_tests()
