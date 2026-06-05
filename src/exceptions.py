@@ -62,3 +62,15 @@ class DBOperationFailedException(CustomException):
             class_name,
             function_name,
         )
+
+
+class ObjectIsNoneException(CustomException):
+    def __init__(
+        self,
+        message: str,
+        log_type: LogType,
+        class_name: str,
+        function_name: str,
+        is_critical: bool = False,
+    ) -> None:
+        super().__init__(message, log_type, class_name, function_name, is_critical)
