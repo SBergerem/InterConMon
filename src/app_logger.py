@@ -30,7 +30,7 @@ class AppLogger:
         console_handler: StreamHandler[TextIO] = logging.StreamHandler()
         console_handler.setLevel(logging.DEBUG)
 
-        formatter = logging.Formatter("%(asctime)s %(levelname)-8s %(message)s")
+        formatter = logging.Formatter("%(asctime)s:  %(levelname)-8s %(message)s")
 
         console_handler.setFormatter(formatter)
         cls._logger.addHandler(console_handler)
