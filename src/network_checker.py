@@ -40,7 +40,7 @@ class NetworkChecker:
                     result.latency_ms = latency
                 else:
                     result.success = False
-                    result.error_message = "Error: Ping failed or timed out"
+                    result.error_message = f"Error: Ping failed or timed out! Target: {target}"
                     AppLogger.error(
                         LogType.SCAN,
                         result.error_message,
@@ -74,9 +74,7 @@ class NetworkChecker:
                         result.latency_ms = float(latency_text.group(1))
                     else:
                         result.latency_ms = None
-                        result.error_message = (
-                            "Ping succeeded, but latency could not be parsed"
-                        )
+                        result.error_message = "Ping succeeded, but latency could not be parsed"
                         AppLogger.warning(
                             LogType.SCAN,
                             result.error_message,
@@ -86,11 +84,7 @@ class NetworkChecker:
                         )
                 else:
                     result.success = False
-                    result.error_message = (
-                        ping_result.stderr
-                        or ping_result.stdout
-                        or "Error: Ping failed or timed out"
-                    )
+                    result.error_message = ping_result.stderr or ping_result.stdout or "Error: Ping failed or timed out"
 
                     AppLogger.error(
                         LogType.SCAN,
@@ -113,6 +107,24 @@ class NetworkChecker:
                     details={"target": target},
                 )
 
+            if result.latency_ms is not None:
+                latency_to_log: str = f"{result.latency_ms:.2f} ms"
+            else:
+                latency_to_log: str = "N/A"
+
+            AppLogger.detailed_debug(
+                LogType.SCAN,
+                f"Ended latency test (Target: {target} | Latency: {latency_to_log})",
+                "NetworkChecker",
+                "test_latency",
+                details={
+                    "target": target,
+                    "success": result.success,
+                    "latency_ms": result.latency_ms,
+                    "error_message": result.error_message,
+                },
+            )
+
         except Exception as ex:
             result.success = False
             result.error_message = str(ex)
@@ -123,18 +135,5 @@ class NetworkChecker:
                 "test_latency",
                 details={"target": target},
             )
-
-        AppLogger.detailed_debug(
-            LogType.SCAN,
-            "Ended ping test",
-            "NetworkChecker",
-            "test_latency",
-            details={
-                "target": target,
-                "success": result.success,
-                "latency_ms": result.latency_ms,
-                "error_message": result.error_message,
-            },
-        )
 
         return result

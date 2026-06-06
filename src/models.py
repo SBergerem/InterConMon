@@ -15,7 +15,7 @@ class OutageChangeState(Enum):
 
 
 class LogType(Enum):
-    UNKNOWN = "unknown"    
+    UNKNOWN = "unknown"
     SCAN = "scan"
     GENERAL = "general"
     SYSTEM = "system"
@@ -49,16 +49,14 @@ class LatencyTestResult:
 
 @dataclass
 class LatencyTestGroupResult:
-    start_time: str | None
+    start_time: str
     end_time: str
-    time_needed_sec: float | None
+    time_needed_sec: float
     any_success: bool
     group_success: bool
-    test_results: list[LatencyTestResult] = field(
-        default_factory=lambda: list[LatencyTestResult]()
-    )
-    
-    
+    test_results: list[LatencyTestResult] = field(default_factory=lambda: list[LatencyTestResult]())
+
+
 @dataclass
 class OutageDetectorResult:
     connection_state: str
@@ -83,9 +81,8 @@ class LogEntry:
     related_object_id: int | None
     details_json: str | None
 
-@dataclass 
+
+@dataclass
 class Setting:
     settings_name: str
     settings_json: str
-    
-

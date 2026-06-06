@@ -20,11 +20,15 @@ class OutageDetector:
         if max_failed_group_test_count > 0:
             self._max_failed_group_test_count: int = max_failed_group_test_count
         else:
+            AppLogger.warning(
+                LogType.SYSTEM,
+                "max_failed_group_test_count is lower than 1. Setting it to 1.",
+                "OutageDetector",
+                "__init__",
+            )
             self._max_failed_group_test_count: int = 1
 
-    def process_group_result(
-        self, group_result: LatencyTestGroupResult, group_id: int
-    ) -> OutageDetectorResult:
+    def process_group_result(self, group_result: LatencyTestGroupResult, group_id: int) -> OutageDetectorResult:
         AppLogger.extended_debug(
             LogType.OUTAGE,
             "Started outage check",
@@ -52,8 +56,7 @@ class OutageDetector:
 
                 if outage_start_time is not None and outage_end_time:
                     outage_duration_sec = (
-                        datetime.fromisoformat(outage_end_time)
-                        - datetime.fromisoformat(outage_start_time)
+                        datetime.fromisoformat(outage_end_time) - datetime.fromisoformat(outage_start_time)
                     ).total_seconds()
                 outage_ended_group_id = group_id
                 outage_started_group_id = self._outage_started_test_group_id
@@ -81,7 +84,7 @@ class OutageDetector:
 
         AppLogger.extended_debug(
             LogType.OUTAGE,
-            "Ended outage checkt",
+            "Ended outage check",
             "OutageDetector",
             "process_group_result",
             related_object_type="LatencyTestGroupResult",
@@ -98,3 +101,14 @@ class OutageDetector:
             outage_started_group_id=outage_started_group_id,
             outage_ended_group_id=outage_ended_group_id,
         )
+
+    def update_max_failed_group_test_count(self, max_failed_group_test_count: int) -> None:
+        if max_failed_group_test_count < 1:
+            AppLogger.warning(
+                LogType.SYSTEM,
+                "Can't update max_failed_group_test_count because the value is lower than 1.",
+                "OutageDetector",
+                "update_max_failed_group_test_count",
+            )
+        else:
+            self._max_failed_group_test_count = max_failed_group_test_count

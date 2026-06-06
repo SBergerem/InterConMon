@@ -2,14 +2,16 @@ from runner import Runner
 from config_manager import ConfigManager
 from app_start_config import AppStartConfig
 from database_manager import DatabaseManager
-from outage_detector import OutageDetector
 from app_logger import AppLogger
 from models import LogType
 from app_settings_manager import AppSettingsManager
+from threading import Thread
 
 if __name__ == "__main__":
+    AppLogger.pre_initialize()
+    
     settings_manager: AppSettingsManager | None = None
-
+    runner_thread: Thread = Thread(target=Runner.run)
     try:
         config: AppStartConfig = ConfigManager.load_config()
 
@@ -24,22 +26,19 @@ if __name__ == "__main__":
 
         settings_manager = AppSettingsManager(database_manager)
         settings_manager.load_settings()
-        outage_detector = OutageDetector(
-            settings_manager.app_settings.latency_test_settings.interval_seconds
-        )
 
         AppLogger.info(LogType.SYSTEM, "Initialization completed", "main", "main")
 
-        Runner.prepare(
-            database_manager,
-            settings_manager.app_settings.latency_test_settings.targets,
-        )
+        Runner.prepare(database_manager, settings_manager)
 
-        Runner.run()
+        runner_thread.start()
     except KeyboardInterrupt:
         if settings_manager is not None:
             settings_manager.save_settings()
             print("Program exited")
+
+        Runner.stop()
+        runner_thread.join()
 
     except Exception as ex:
         AppLogger.critical(LogType.SYSTEM, str(ex), "main", "main")

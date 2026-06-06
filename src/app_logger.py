@@ -14,17 +14,26 @@ class AppLogger:
     _logger: Logger = logging.getLogger("InterConMon")
     _database_manager: DatabaseManager | None = None
     _enabled_console_log_levels: set[LogLevel] = {
-        LogLevel.INFO,
-        LogLevel.WARNING,
-        LogLevel.ERROR,
-        LogLevel.CRITICAL,
+        LogLevel.INFO
     }
     _enabled_database_log_levels: set[LogLevel] = {
-        LogLevel.INFO,
-        LogLevel.WARNING,
-        LogLevel.ERROR,
-        LogLevel.CRITICAL,
+        LogLevel.INFO
     }
+
+    @classmethod
+    def pre_initialize(cls)->None:
+        cls._logger.setLevel(logging.DEBUG)
+
+        if cls._logger.handlers:
+            return
+
+        console_handler: StreamHandler[TextIO] = logging.StreamHandler()
+        console_handler.setLevel(logging.DEBUG)
+
+        formatter = logging.Formatter("%(asctime)s %(levelname)-8s %(message)s")
+
+        console_handler.setFormatter(formatter)
+        cls._logger.addHandler(console_handler)
 
     @classmethod
     def initialize(
@@ -36,19 +45,6 @@ class AppLogger:
         cls.set_enabled_console_log_levels(enabled_console_log_levels)
         cls.set_enabled_database_log_levels(enabled_database_log_levels)
         cls._database_manager = database_manager
-
-        cls._logger.setLevel(logging.DEBUG)
-
-        if cls._logger.handlers:
-            return
-
-        console_handler: StreamHandler[TextIO] = logging.StreamHandler()
-        console_handler.setLevel(logging.DEBUG)
-
-        formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
-
-        console_handler.setFormatter(formatter)
-        cls._logger.addHandler(console_handler)
 
     @classmethod
     def set_enabled_console_log_levels(
@@ -87,33 +83,53 @@ class AppLogger:
         skip_database: bool = False,
     ) -> None:
         if cls._is_console_logging_allowed(log_level):
+            formatted_message: str = (
+                f"{"":<11}  | "
+                f"{"[" + log_type.value.upper() + "]":<12}  | "
+                f"{class_name:<20} | "
+                f"{function_name:<30} | "
+                f"{message}"
+            )
+
             match log_level:
                 case LogLevel.INFO:
-                    cls._logger.info(f"[{log_type.value}] {message}")
+                    formatted_message: str = (
+                        f"{"":<11}  | "
+                        f"{"[" + log_type.value.upper() + "]":<12}  | "
+                        f"{"-":<20} | "
+                        f"{"-":<30} | "
+                        f"{message}"
+                    )
+
+                    cls._logger.info(formatted_message)
                 case LogLevel.WARNING:
-                    cls._logger.warning(
-                        f"[{log_type.value}] (Class: {class_name}) (Function: {function_name}) {message}"
-                    )
+                    cls._logger.warning(formatted_message)
                 case LogLevel.ERROR:
-                    cls._logger.error(
-                        f"[{log_type.value}] (Class: {class_name}) (Function: {function_name}) {message}"
-                    )
+                    cls._logger.error(formatted_message)
                 case LogLevel.CRITICAL:
-                    cls._logger.critical(
-                        f"[{log_type.value}] (Class: {class_name}) (Function: {function_name}) {message}"
-                    )
+                    cls._logger.critical(formatted_message)
                 case LogLevel.DEBUG:
-                    cls._logger.debug(
-                        f"[{log_type.value}] (Class: {class_name}) (Function: {function_name}) {message}"
-                    )
+                    cls._logger.debug(formatted_message)
                 case LogLevel.EXTENDED_DEBUG:
-                    cls._logger.debug(
-                        f"(extended) [{log_type.value}] (Class: {class_name}) (Function: {function_name}) {message}"
+                    formatted_message: str = (
+                        f"{"(EXTENDED) ":<11}  | "
+                        f"{"[" + log_type.value.upper() + "]":<12}  | "
+                        f"{class_name:<20} | "
+                        f"{function_name:<30} | "
+                        f"{message}"
                     )
+
+                    cls._logger.debug(formatted_message)
                 case LogLevel.DETAILED_DEBUG:
-                    cls._logger.debug(
-                        f"(detailed) [{log_type.value}] (Class: {class_name}) (Function: {function_name}) {message}"
+                    formatted_message: str = (
+                        f"{"(DETAILED) ":<11}  | "
+                        f"{"[" + log_type.value.upper() + "]":<12}  | "
+                        f"{class_name:<20} | "
+                        f"{function_name:<30} | "
+                        f"{message}"
                     )
+
+                    cls._logger.debug(formatted_message)
 
         if cls._database_manager is None or skip_database:
             return
@@ -139,7 +155,15 @@ class AppLogger:
                     outer_cursor=outer_cursor,
                 )
             except Exception as ex:
-                cls._logger.error(f"Could not write log entry to database: {ex}")
+                formatted_message: str = (
+                    f"{"":<11}  | "
+                    f"{"[" + log_type.value.upper() + "]":<12}  | "
+                    f"{class_name:<20} | "
+                    f"{function_name:<30} | "
+                    f"Could not write log entry (message: {message}) to database: {ex}"
+                )
+                
+                cls._logger.error(formatted_message)
 
     @classmethod
     def debug(
