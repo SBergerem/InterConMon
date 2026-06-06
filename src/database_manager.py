@@ -76,9 +76,10 @@ class DatabaseManager:
 
             params: tuple[str | int] = (primary_key_value,)
 
+            cursor.execute(sql, params)
+
             tuple_exists: bool = cursor.fetchone() is not None
 
-            cursor.execute(sql, params)
             self._log_statement(
                 "_check_for_existing_tuple",
                 cursor,
@@ -329,6 +330,9 @@ class DatabaseManager:
             )
 
             cursor.execute(sql, params)
+
+            outage_id: int = cursor.lastrowid if cursor.lastrowid is not None else -1
+
             self._log_statement(
                 "save_outage",
                 cursor,
@@ -336,8 +340,6 @@ class DatabaseManager:
             )
 
             connection.commit()
-
-            outage_id: int = cursor.lastrowid if cursor.lastrowid is not None else -1
 
             AppLogger.debug(
                 LogType.DATABASE,

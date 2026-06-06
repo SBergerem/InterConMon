@@ -3,11 +3,7 @@ from network_checker import NetworkChecker
 from datetime import datetime
 from app_logger import AppLogger
 from database_manager import DatabaseManager
-from exceptions import (
-    CustomException,
-    ObjectIsNotPreparedException,
-    ThreadIsAlreadyRunningException
-)
+from exceptions import CustomException, ObjectIsNotPreparedException, ThreadIsAlreadyRunningException
 from outage_detector import OutageDetector
 from app_settings_manager import AppSettingsManager
 from threading import Lock, Thread, Event
@@ -241,3 +237,8 @@ class Runner:
             cls._latency_test_group_thread.join()
 
         AppLogger.info(LogType.SYSTEM, "Runner stopped", "Runner", "stop")
+
+    @classmethod
+    def is_running(cls) -> bool:
+        with cls._lock_thread:
+            return cls._latency_test_group_thread is not None and cls._latency_test_group_thread.is_alive()

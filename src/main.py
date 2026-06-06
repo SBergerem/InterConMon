@@ -5,13 +5,12 @@ from database_manager import DatabaseManager
 from app_logger import AppLogger
 from models import LogType
 from app_settings_manager import AppSettingsManager
-from threading import Thread
+import time
 
 if __name__ == "__main__":
     AppLogger.pre_initialize()
-    
+
     settings_manager: AppSettingsManager | None = None
-    runner_thread: Thread = Thread(target=Runner.run)
     try:
         config: AppStartConfig = ConfigManager.load_config()
 
@@ -31,14 +30,18 @@ if __name__ == "__main__":
 
         Runner.prepare(database_manager, settings_manager)
 
-        runner_thread.start()
+        while True:
+            if not Runner.is_running():
+                Runner.run()
+
+            time.sleep(1)
+
     except KeyboardInterrupt:
         if settings_manager is not None:
             settings_manager.save_settings()
             print("Program exited")
 
         Runner.stop()
-        runner_thread.join()
 
     except Exception as ex:
         AppLogger.critical(LogType.SYSTEM, str(ex), "main", "main")
