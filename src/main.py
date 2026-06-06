@@ -37,11 +37,11 @@ if __name__ == "__main__":
             time.sleep(1)
 
     except KeyboardInterrupt:
+        Runner.stop()
+
         if settings_manager is not None:
             settings_manager.save_settings()
             print("Program exited")
-
-        Runner.stop()
 
     except Exception as ex:
         AppLogger.critical(LogType.SYSTEM, str(ex), "main", "main")
