@@ -16,6 +16,7 @@ class BaseRepository:
         outer_cursor: Cursor,
         details: dict[str, object] | None = None,
     ) -> None:
+        try:
         #AppLogger.extended_debug(
         #    LogType.DATABASE,
         #    "Executing SQL Statement",
@@ -24,7 +25,9 @@ class BaseRepository:
         #    details=details,
         #    outer_cursor=outer_cursor,
         #)
-        pass
+            pass
+        except Exception as ex:
+            raise DBOperationFailedException(str(ex), "BaseRepository", "_log_statement")
 
     # Return a bool which tells if there is already a tuple with the primary key value, so an update method can be used instead an insert
     # Never use it outside of this class. SQL injection potential
@@ -64,4 +67,4 @@ class BaseRepository:
 
             return tuple_exists
         except Exception as ex:
-            raise DBOperationFailedException(str(ex), "DatabaseManager", "_check_for_existing_tuple")
+            raise DBOperationFailedException(str(ex), "BaseRepository", "_check_for_existing_tuple")

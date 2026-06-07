@@ -59,6 +59,11 @@ class LatencyTestGroupResult:
     group_success: bool
     test_results: list[LatencyTestResult] = field(default_factory=lambda: list[LatencyTestResult]())
 
+    def set_group_id(self, group_id: int) -> None:
+        self.id = group_id
+        for test_result in self.test_results:
+            test_result.group_id = group_id
+
 
 @dataclass
 class OutageDetectorResult:
@@ -75,17 +80,16 @@ class OutageDetectorResult:
 
 @dataclass
 class LogEntry:
-    id: int 
+    id: int
     date_time: str
     log_level: str
     log_type: str
     log_message: str
-    function_name: str
     class_name: str
+    function_name: str
     related_object_type: str | None
     related_object_id: int | None
     details_json: str | None
-   
 
 
 @dataclass

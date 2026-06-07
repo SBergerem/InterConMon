@@ -18,14 +18,14 @@ class OutageDetector:
         self._started_test_group_id: int | None = None
         self._max_failed_group_test_count: int = 3
 
-    def process_group_result(self, group_result: LatencyTestGroupResult, group_id: int) -> OutageDetectorResult:
+    def process_group_result(self, group_result: LatencyTestGroupResult) -> OutageDetectorResult:
         AppLogger.extended_debug(
             LogType.OUTAGE,
             "Started outage check",
             "OutageDetector",
             "process_group_result",
             related_object_type="LatencyTestGroupResult",
-            related_object_id=group_id,
+            related_object_id=group_result.id,
         )
 
         test_succeeded: bool = group_result.any_success
@@ -45,10 +45,8 @@ class OutageDetector:
                 end_time = connection_test_date_time
 
                 if start_time is not None and end_time:
-                    duration_sec = (
-                        datetime.fromisoformat(end_time) - datetime.fromisoformat(start_time)
-                    ).total_seconds()
-                ended_group_id = group_id
+                    duration_sec = (datetime.fromisoformat(end_time) - datetime.fromisoformat(start_time)).total_seconds()
+                ended_group_id = group_result.id
                 started_group_id = self._started_test_group_id
 
             self._current_connection_state = ConnectionState.ONLINE
@@ -60,7 +58,7 @@ class OutageDetector:
                 self._first_failed_test_time = group_result.start_time
 
             if self._started_test_group_id is None:
-                self._started_test_group_id = group_id
+                self._started_test_group_id = group_result.id
             started_group_id = self._started_test_group_id
 
             self._failed_groups_test_count += 1
@@ -78,7 +76,7 @@ class OutageDetector:
             "OutageDetector",
             "process_group_result",
             related_object_type="LatencyTestGroupResult",
-            related_object_id=group_id,
+            related_object_id=group_result.id,
         )
 
         return OutageDetectorResult(

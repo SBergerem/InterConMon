@@ -9,6 +9,7 @@ from threading import Thread, Event
 from models import LatencyTestResult, LatencyTestGroupResult, LogType, OutageDetectorResult, OutageChangeState, ConnectionState
 from app_settings import AppSettings, LatencyTestSettings
 from database.latency_test_group_repository import LatencyTestGroupRepository
+from database.latency_test_repository import LatencyTestRepository
 from database.outage_repository import OutageRepository
 
 
@@ -19,6 +20,7 @@ class Runner:
         self._stop_event: Event = Event()
         self._database_manager: DatabaseManager = database_manager
         self._app_settings: AppSettings = app_settings
+        self._latency_test_repository: LatencyTestRepository = LatencyTestRepository(database_manager)
         self._latency_test_group_repository: LatencyTestGroupRepository = LatencyTestGroupRepository(database_manager)
         self._outage_repository: OutageRepository = OutageRepository(database_manager)
 
@@ -33,22 +35,18 @@ class Runner:
 
             while not self._stop_event.is_set():
                 if next_latency_test < time.time():
-                    latency_result: tuple[LatencyTestGroupResult, int] = self._run_latency_tests(
-                        self._database_manager, network_checker, latency_test_settings.get_targets()
-                    )
-                    
+                    latency_result = self._run_latency_tests(network_checker, latency_test_settings.get_targets())
+
                     if self._stop_event.is_set():
                         raise ThreadStoppedException(LogType.SYSTEM, "Runner", "_loop")
-                    
+
                     max_failed_count: int = latency_test_settings.get_max_failed_group_test_count()
-                    self._run_outage_detection(
-                        self._database_manager, outage_detector, max_failed_count, latency_result[0], latency_result[1]
-                    )
+                    self._run_outage_detection(outage_detector, max_failed_count, latency_result)
                     next_latency_test = time.time() + latency_test_settings.get_interval_seconds()
 
                 self._stop_event.wait(0.1)
-                
-            raise ThreadStoppedException(LogType.SYSTEM, "Runner", "_loop") # Because it can only end, when the stop was requested.
+
+            raise ThreadStoppedException(LogType.SYSTEM, "Runner", "_loop")  # Because it can only end, when the stop was requested.
         except CustomException:
             pass
         except Exception as ex:
@@ -111,31 +109,28 @@ class Runner:
         )
 
     # Collects the test result and the group_id, so we can give it the outage detector
-    def _run_latency_tests(
-        self, database_manager: DatabaseManager, network_checker: NetworkChecker, targets: list[str]
-    ) -> tuple[LatencyTestGroupResult, int]:
+    def _run_latency_tests(self, network_checker: NetworkChecker, targets: list[str]) -> LatencyTestGroupResult:
         result: LatencyTestGroupResult = self._run_latency_test_group(targets, network_checker)
-        group_id: int = self._latency_test_group_repository.save(result)
-        return (result, group_id)
+        self._latency_test_group_repository.save([result])
+        self._latency_test_repository.save(result.test_results)
+        return result
 
     # Checks for an outage and logs it
     def _run_outage_detection(
         self,
-        database_manager: DatabaseManager,
         outage_detector: OutageDetector,
         max_failed_group_test_count: int,
         latency_test_group_result: LatencyTestGroupResult,
-        group_id: int,
     ) -> bool:
         outage_detector.set_max_failed_group_test_count(max_failed_group_test_count)
 
-        detector_result: OutageDetectorResult = outage_detector.process_group_result(latency_test_group_result, group_id)
+        detector_result: OutageDetectorResult = outage_detector.process_group_result(latency_test_group_result)
 
         if detector_result.change_state == OutageChangeState.STARTED.value:
             AppLogger.info(LogType.OUTAGE, "Outage started", "Runner", "_run_outage_detection")
 
         if detector_result.change_state == OutageChangeState.ENDED.value:
-            result_id: int = self._outage_repository.save(detector_result)
+            result_id: int = self._outage_repository.save([detector_result])
             AppLogger.info(
                 LogType.OUTAGE,
                 "Outage ended",

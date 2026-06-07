@@ -136,18 +136,20 @@ class AppLogger:
 
             try:
                 cls._log_entry_repository.save(
-                    LogEntry(
-                        0,
-                        datetime.now().isoformat(),
-                        log_level.value,
-                        log_type.value,
-                        message,
-                        class_name,
-                        function_name,
-                        related_object_type,
-                        related_object_id,
-                        details_json,
-                    ),
+                    [
+                        LogEntry(
+                            0,
+                            datetime.now().isoformat(),
+                            log_level.value,
+                            log_type.value,
+                            message,
+                            class_name,
+                            function_name,
+                            related_object_type,
+                            related_object_id,
+                            details_json,
+                        )
+                    ],
                     outer_cursor=outer_cursor,
                 )
             except Exception as ex:
