@@ -28,7 +28,7 @@ class LatencyTestRepository(BaseRepository):
 
                 self._log_statement(
                     "LatencyTestRepository",
-                    "save",
+                    "_save_internal",
                     cursor,
                     {"sql": sql, "params": params},
                 )
@@ -47,7 +47,7 @@ class LatencyTestRepository(BaseRepository):
 
             self._log_statement(
                 "LatencyTestRepository",
-                "load",
+                "_load_internal",
                 cursor,
                 {"sql": sql, "params": {}, "row_count": len(rows)},
             )
@@ -62,6 +62,9 @@ class LatencyTestRepository(BaseRepository):
 
     def save(self, latency_tests: list[LatencyTestResult]) -> None:
         self._database_manager.run_in_transaction(lambda cursor: self._save_internal(cursor, latency_tests))
+
+    def save_in_transaction(self, latency_tests: list[LatencyTestResult], cursor: Cursor) -> None:
+        self._save_internal(cursor, latency_tests)
 
     def load(self, internal_where_statement: str = "") -> list[LatencyTestResult]:
         return self._database_manager.run_in_transaction(lambda cursor: self._load_internal(cursor, internal_where_statement))

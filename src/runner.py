@@ -11,6 +11,7 @@ from app_settings import AppSettings, LatencyTestSettings
 from database.latency_test_group_repository import LatencyTestGroupRepository
 from database.latency_test_repository import LatencyTestRepository
 from database.outage_repository import OutageRepository
+from sqlite3 import Cursor
 
 
 class Runner:
@@ -19,6 +20,7 @@ class Runner:
         self._loop_thread: Thread | None = None
         self._stop_event: Event = Event()
         self._app_settings: AppSettings = app_settings
+        self._database_manager: DatabaseManager = database_manager
         self._latency_test_repository: LatencyTestRepository = LatencyTestRepository(database_manager)
         self._latency_test_group_repository: LatencyTestGroupRepository = LatencyTestGroupRepository(database_manager)
         self._outage_repository: OutageRepository = OutageRepository(database_manager)
@@ -34,7 +36,7 @@ class Runner:
 
             while not self._stop_event.is_set():
                 if next_latency_test < time.time():
-                    latency_result = self._run_latency_tests(network_checker, latency_test_settings.get_targets())
+                    latency_result: LatencyTestGroupResult = self._run_latency_tests(network_checker, latency_test_settings.get_targets())
 
                     if self._stop_event.is_set():
                         raise ThreadStoppedException("Runner", "_loop", "self._loop_thread")
@@ -46,8 +48,11 @@ class Runner:
                 self._stop_event.wait(0.1)
 
             raise ThreadStoppedException("Runner", "_loop", "self._loop_thread")  # Because it can only end, when the stop was requested.
-        except ThreadStoppedException:
-            pass
+        except ThreadStoppedException as ex:
+            AppLogger.info(LogType.SYSTEM, str(ex), ex.class_name, ex.function_name)
+        except CustomException as ex:
+            AppLogger.error(LogType.SCAN, str(ex), ex.class_name, ex.function_name)
+            self._stop_event.set()
         except Exception as ex:
             AppLogger.error(LogType.SCAN, str(ex), "Runner", "_loop")
             self._stop_event.set()
@@ -106,11 +111,17 @@ class Runner:
             test_results,
         )
 
+    # Save the group and the single results in a transaction. So that if something wrent wrong, neither the group nor the single tests get saved
+    def _save_latency_test_results(
+        self, cursor: Cursor, latency_test_results: list[LatencyTestResult], latency_test_group_result: LatencyTestGroupResult
+    ) -> None:
+        self._latency_test_group_repository.save_in_transaction([latency_test_group_result], cursor)
+        self._latency_test_repository.save_in_transaction(latency_test_results, cursor)
+
     # Collects the test result and the group_id, so we can give it the outage detector
     def _run_latency_tests(self, network_checker: NetworkChecker, targets: list[str]) -> LatencyTestGroupResult:
         result: LatencyTestGroupResult = self._run_latency_test_group(targets, network_checker)
-        self._latency_test_group_repository.save([result])
-        self._latency_test_repository.save(result.test_results)
+        self._database_manager.run_in_transaction(lambda cursor: self._save_latency_test_results(cursor, result.test_results, result))
         return result
 
     # Checks for an outage and logs it

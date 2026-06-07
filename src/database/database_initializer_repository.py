@@ -22,7 +22,7 @@ class DatabaseInitializerRepository(BaseRepository):
             cursor.execute(sql)
             self._log_statement(
                 "DatabaseInitializerRepository",
-                "initialize_database",
+                "_initialize_database_intern",
                 cursor,
                 {"sql": sql, "params": {}},
             )
@@ -44,7 +44,7 @@ class DatabaseInitializerRepository(BaseRepository):
             cursor.execute(sql)
             self._log_statement(
                 "DatabaseInitializerRepository",
-                "initialize_database",
+                "_initialize_database_intern",
                 cursor,
                 {"sql": sql, "params": {}},
             )
@@ -68,7 +68,7 @@ class DatabaseInitializerRepository(BaseRepository):
             cursor.execute(sql)
             self._log_statement(
                 "DatabaseInitializerRepository",
-                "initialize_database",
+                "_initialize_database_intern",
                 cursor,
                 {"sql": sql, "params": {}},
             )
@@ -90,7 +90,7 @@ class DatabaseInitializerRepository(BaseRepository):
             cursor.execute(sql)
             self._log_statement(
                 "DatabaseInitializerRepository",
-                "initialize_database",
+                "_initialize_database_intern",
                 cursor,
                 {"sql": sql, "params": {}},
             )
@@ -105,7 +105,7 @@ class DatabaseInitializerRepository(BaseRepository):
             cursor.execute(sql)
             self._log_statement(
                 "DatabaseInitializerRepository",
-                "initialize_database",
+                "_initialize_database_intern",
                 cursor,
                 {"sql": sql, "params": {}},
             )

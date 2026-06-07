@@ -34,7 +34,7 @@ class LatencyTestGroupRepository(BaseRepository):
 
                 self._log_statement(
                     "LatencyTestGroupRepository",
-                    "save",
+                    "_save_internal",
                     cursor,
                     {"sql": sql, "params": params},
                 )
@@ -56,7 +56,7 @@ class LatencyTestGroupRepository(BaseRepository):
 
             self._log_statement(
                 "LatencyTestGroupRepository",
-                "load",
+                "_load_internal",
                 cursor,
                 {"sql": sql, "params": {}, "row_count": len(rows)},
             )
@@ -71,6 +71,9 @@ class LatencyTestGroupRepository(BaseRepository):
 
     def save(self, latency_test_group_results: list[LatencyTestGroupResult]) -> None:
         return self._database_manager.run_in_transaction(lambda cursor: self._save_internal(cursor, latency_test_group_results))
+
+    def save_in_transaction(self, latency_test_group_results: list[LatencyTestGroupResult], cursor: Cursor) -> None:
+        self._save_internal(cursor, latency_test_group_results)
 
     def load(self, internal_where_statement: str = "") -> list[LatencyTestGroupResult]:
         return self._database_manager.run_in_transaction(lambda cursor: self._load_internal(cursor, internal_where_statement))

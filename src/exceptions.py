@@ -9,7 +9,9 @@ class CustomException(Exception):
         message: str,
         exception_name: str = "Custom exception (General)",
     ) -> None:
-        super().__init__(f"[{exception_name}] (Class: {class_name} Func: {function_name}) -> {message}")
+        self.class_name: str = class_name
+        self.function_name: str = function_name
+        super().__init__(f"[{exception_name}] -> {message}")
 
 
 class DatabaseConnectionException(CustomException):

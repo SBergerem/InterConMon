@@ -81,13 +81,18 @@ class AppLogger:
         outer_cursor: Cursor | None = None,
         skip_database: bool = False,
     ) -> None:
+        details_json: str | None = None
+        if details is not None:
+            details_json = json.dumps(details, ensure_ascii=False)
+        
         if cls._is_console_logging_allowed(log_level):
             formatted_message: str = (
                 f"{"":<11}  | "
                 f"{"[" + log_type.value.upper() + "]":<12}  | "
                 f"{class_name:<30} | "
                 f"{function_name:<30} | "
-                f"{message}"
+                f"{message:<100} | "
+                f"{details_json:<80}"
             )
 
             match log_level:
@@ -111,7 +116,8 @@ class AppLogger:
                         f"{"[" + log_type.value.upper() + "]":<12}  | "
                         f"{class_name:<30} | "
                         f"{function_name:<30} | "
-                        f"{message}"
+                        f"{message:<100} | "
+                        f"{details_json:<80}"
                     )
 
                     cls._logger.debug(formatted_message)
@@ -121,7 +127,8 @@ class AppLogger:
                         f"{"[" + log_type.value.upper() + "]":<12}  | "
                         f"{class_name:<30} | "
                         f"{function_name:<30} | "
-                        f"{message}"
+                        f"{message:<100} | "
+                        f"{details_json:<80}"
                     )
 
                     cls._logger.debug(formatted_message)
@@ -130,10 +137,6 @@ class AppLogger:
             return
 
         if cls._is_database_logging_allowed(log_level):
-            details_json: str | None = None
-            if details is not None:
-                details_json = json.dumps(details, ensure_ascii=False)
-
             try:
                 cls._log_entry_repository.save(
                     [

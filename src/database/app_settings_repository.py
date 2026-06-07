@@ -47,7 +47,7 @@ class AppSettingsRepository(BaseRepository):
                     cursor.execute(sql, params)
                     self._log_statement(
                         "AppSettingsRepository",
-                        "save",
+                        "_save_internal",
                         cursor,
                         {"sql": sql, "params": params},
                     )
@@ -66,7 +66,7 @@ class AppSettingsRepository(BaseRepository):
 
             self._log_statement(
                 "AppSettingsRepository",
-                "load",
+                "_load_internal",
                 cursor,
                 {"sql": sql, "params": {}, "row_count": len(rows)},
             )

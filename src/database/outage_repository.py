@@ -49,7 +49,7 @@ class OutageRepository(BaseRepository):
 
                 self._log_statement(
                     "OutageRepository",
-                    "save",
+                    "_save_internal",
                     cursor,
                     {"sql": sql, "params": params},
                 )
@@ -69,7 +69,7 @@ class OutageRepository(BaseRepository):
 
             self._log_statement(
                 "LatencyTestRepository",
-                "load",
+                "_load_internal",
                 cursor,
                 {"sql": sql, "params": {}, "row_count": len(rows)},
             )
