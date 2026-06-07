@@ -21,13 +21,10 @@ class NetworkChecker:
             details={"target": target},
         )
 
-        result = LatencyTestResult(
-            date_time=datetime.now().isoformat(),
-            target=target,
-            success=False,
-            latency_ms=None,
-            error_message=None,
-        )
+        success: bool = False
+        latency_ms: float | None = None
+        error_message: str = ""
+        date_time: str = datetime.now().isoformat()
 
         try:
             system: str = platform.system()
@@ -36,14 +33,14 @@ class NetworkChecker:
                 latency: None | Any | Literal[False] = ping(target, unit="ms")
 
                 if isinstance(latency, (int, float)) and not isinstance(latency, bool):
-                    result.success = True
-                    result.latency_ms = latency
+                    success = True
+                    latency_ms = latency
                 else:
-                    result.success = False
-                    result.error_message = f"Error: Ping failed or timed out! Target: {target}"
+                    success = False
+                    error_message = f"Error: Ping failed or timed out! Target: {target}"
                     AppLogger.error(
                         LogType.SCAN,
-                        result.error_message,
+                        error_message,
                         "NetworkChecker",
                         "test_latency",
                         details={"target": target, "ping_result": latency},
@@ -64,31 +61,29 @@ class NetworkChecker:
                 )
 
                 if ping_result.returncode == 0:
-                    latency_text: re.Match[str] | None = re.search(
-                        r"time=\s*([0-9]+(?:\.[0-9]+)?)\s*ms", ping_result.stdout
-                    )
+                    latency_text: re.Match[str] | None = re.search(r"time=\s*([0-9]+(?:\.[0-9]+)?)\s*ms", ping_result.stdout)
 
-                    result.success = True
+                    success = True
 
                     if latency_text is not None:
-                        result.latency_ms = float(latency_text.group(1))
+                        latency_ms = float(latency_text.group(1))
                     else:
-                        result.latency_ms = None
-                        result.error_message = "Ping succeeded, but latency could not be parsed"
+                        latency_ms = None
+                        error_message = "Ping succeeded, but latency could not be parsed"
                         AppLogger.warning(
                             LogType.SCAN,
-                            result.error_message,
+                            error_message,
                             "NetworkChecker",
                             "test_latency",
                             details={"target": target, "stdout": ping_result.stdout},
                         )
                 else:
-                    result.success = False
-                    result.error_message = ping_result.stderr or ping_result.stdout or "Error: Ping failed or timed out"
+                    success = False
+                    error_message = ping_result.stderr or ping_result.stdout or "Error: Ping failed or timed out"
 
                     AppLogger.error(
                         LogType.SCAN,
-                        result.error_message,
+                        error_message,
                         "NetworkChecker",
                         "test_latency",
                         details={
@@ -97,18 +92,18 @@ class NetworkChecker:
                         },
                     )
             else:
-                result.success = False
-                result.error_message = "Error: Can't ping. OS unknown"
+                success = False
+                error_message = "Error: Can't ping. OS unknown"
                 AppLogger.error(
                     LogType.SCAN,
-                    result.error_message,
+                    error_message,
                     "NetworkChecker",
                     "test_latency",
                     details={"target": target},
                 )
 
-            if result.latency_ms is not None:
-                latency_to_log: str = f"{result.latency_ms:.2f} ms"
+            if latency_ms is not None:
+                latency_to_log: str = f"{latency_ms:.2f} ms"
             else:
                 latency_to_log: str = "N/A"
 
@@ -119,21 +114,21 @@ class NetworkChecker:
                 "test_latency",
                 details={
                     "target": target,
-                    "success": result.success,
-                    "latency_ms": result.latency_ms,
-                    "error_message": result.error_message,
+                    "success": success,
+                    "latency_ms": latency_ms,
+                    "error_message": error_message,
                 },
             )
 
         except Exception as ex:
-            result.success = False
-            result.error_message = str(ex)
+            success = False
+            error_message = str(ex)
             AppLogger.error(
                 LogType.SCAN,
-                result.error_message,
+                error_message,
                 "NetworkChecker",
                 "test_latency",
                 details={"target": target},
             )
 
-        return result
+        return LatencyTestResult(0, 0, date_time, target, success, latency_ms, error_message)

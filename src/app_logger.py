@@ -5,23 +5,21 @@ from datetime import datetime
 import json
 from typing import TYPE_CHECKING, TextIO
 from sqlite3 import Cursor
+from database.log_entry_repository import LogEntryRepository
 
 if TYPE_CHECKING:
-    from database_manager import DatabaseManager
+    from database.database_manager import DatabaseManager
 
 
 class AppLogger:
     _logger: Logger = logging.getLogger("InterConMon")
-    _database_manager: DatabaseManager | None = None
-    _enabled_console_log_levels: set[LogLevel] = {
-        LogLevel.INFO
-    }
-    _enabled_database_log_levels: set[LogLevel] = {
-        LogLevel.INFO
-    }
+    _log_entry_repository: LogEntryRepository
+    _enabled_console_log_levels: set[LogLevel] = {LogLevel.INFO}
+    _enabled_database_log_levels: set[LogLevel] = {LogLevel.INFO}
+    _is_initialized: bool = False
 
     @classmethod
-    def pre_initialize(cls)->None:
+    def pre_initialize(cls) -> None:
         cls._logger.setLevel(logging.DEBUG)
 
         if cls._logger.handlers:
@@ -44,7 +42,8 @@ class AppLogger:
     ) -> None:
         cls.set_enabled_console_log_levels(enabled_console_log_levels)
         cls.set_enabled_database_log_levels(enabled_database_log_levels)
-        cls._database_manager = database_manager
+        cls._log_entry_repository = LogEntryRepository(database_manager)
+        cls._is_initialized = True
 
     @classmethod
     def set_enabled_console_log_levels(
@@ -94,11 +93,7 @@ class AppLogger:
             match log_level:
                 case LogLevel.INFO:
                     formatted_message: str = (
-                        f"{"":<11}  | "
-                        f"{"[" + log_type.value.upper() + "]":<12}  | "
-                        f"{"-":<20} | "
-                        f"{"-":<30} | "
-                        f"{message}"
+                        f"{"":<11}  | " f"{"[" + log_type.value.upper() + "]":<12}  | " f"{"-":<20} | " f"{"-":<30} | " f"{message}"
                     )
 
                     cls._logger.info(formatted_message)
@@ -131,7 +126,7 @@ class AppLogger:
 
                     cls._logger.debug(formatted_message)
 
-        if cls._database_manager is None or skip_database:
+        if skip_database or not cls._is_initialized:
             return
 
         if cls._is_database_logging_allowed(log_level):
@@ -140,11 +135,12 @@ class AppLogger:
                 details_json = json.dumps(details, ensure_ascii=False)
 
             try:
-                cls._database_manager.save_log_entry(
+                cls._log_entry_repository.save(
                     LogEntry(
+                        0,
                         datetime.now().isoformat(),
-                        log_level,
-                        log_type,
+                        log_level.value,
+                        log_type.value,
                         message,
                         class_name,
                         function_name,
@@ -162,7 +158,7 @@ class AppLogger:
                     f"{function_name:<30} | "
                     f"Could not write log entry (message: {message}) to database: {ex}"
                 )
-                
+
                 cls._logger.error(formatted_message)
 
     @classmethod

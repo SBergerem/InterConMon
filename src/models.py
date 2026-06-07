@@ -40,6 +40,8 @@ class LogLevel(Enum):
 
 @dataclass
 class LatencyTestResult:
+    id: int
+    group_id: int
     date_time: str
     target: str
     success: bool
@@ -49,6 +51,7 @@ class LatencyTestResult:
 
 @dataclass
 class LatencyTestGroupResult:
+    id: int
     start_time: str
     end_time: str
     time_needed_sec: float
@@ -59,27 +62,30 @@ class LatencyTestGroupResult:
 
 @dataclass
 class OutageDetectorResult:
+    id: int
     connection_state: str
     last_connection_test: str
-    outage_change_state: str
-    outage_start_time: str | None
-    outage_end_time: str | None
-    outage_duration_sec: float | None
-    outage_started_group_id: int | None
-    outage_ended_group_id: int | None
+    change_state: str
+    start_time: str | None
+    end_time: str | None
+    duration_sec: float | None
+    started_group_id: int | None
+    ended_group_id: int | None
 
 
 @dataclass
 class LogEntry:
+    id: int 
     date_time: str
-    log_level: LogLevel
-    log_type: LogType
+    log_level: str
+    log_type: str
     log_message: str
     function_name: str
     class_name: str
     related_object_type: str | None
     related_object_id: int | None
     details_json: str | None
+   
 
 
 @dataclass

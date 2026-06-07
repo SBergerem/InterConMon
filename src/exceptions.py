@@ -1,4 +1,3 @@
-from app_logger import AppLogger
 from models import LogType
 
 
@@ -13,22 +12,22 @@ class CustomException(Exception):
         exception_name: str = "Custom exception (General)",
     ) -> None:
 
-        if is_critical:
-            AppLogger.critical(
-                log_type,
-                f"[{exception_name}] -> {message}",
-                class_name,
-                function_name,
-                skip_database=True,
-            )
-        else:
-            AppLogger.error(
-                log_type,
-                f"[{exception_name}] -> {message}",
-                class_name,
-                function_name,
-                skip_database=True,
-            )
+        # if is_critical:
+        # AppLogger.critical(
+        #    log_type,
+        #    f"[{exception_name}] -> {message}",
+        #    class_name,
+        #    function_name,
+        #    skip_database=True,
+        # )
+        # else:
+        # AppLogger.error(
+        #    log_type,
+        #    f"[{exception_name}] -> {message}",
+        #    class_name,
+        #    function_name,
+        #    skip_database=True,
+        # )
 
         super().__init__(message)
 
@@ -46,6 +45,7 @@ class DatabaseConnectionException(CustomException):
             class_name,
             function_name,
             exception_name="DatabaseConnectionException",
+            is_critical=is_critical,
         )
 
 
@@ -62,6 +62,7 @@ class DBConIsNoneException(CustomException):
             class_name,
             function_name,
             exception_name="DBConIsNoneException",
+            is_critical=is_critical,
         )
 
 
@@ -74,11 +75,7 @@ class DBOperationFailedException(CustomException):
         is_critical: bool = False,
     ) -> None:
         super().__init__(
-            message,
-            LogType.DATABASE,
-            class_name,
-            function_name,
-            exception_name="DBOperationFailedException",
+            message, LogType.DATABASE, class_name, function_name, exception_name="DBOperationFailedException", is_critical=is_critical
         )
 
 
@@ -139,4 +136,22 @@ class ThreadIsAlreadyRunningException(CustomException):
             function_name,
             is_critical=is_critical,
             exception_name="ThreadIsAlreadyRunningException",
+        )
+
+
+class ThreadStoppedException(CustomException):
+    def __init__(
+        self,
+        log_type: LogType,
+        class_name: str,
+        function_name: str,
+        is_critical: bool = False,
+    ) -> None:
+        super().__init__(
+            f"Thread stopped",
+            log_type,
+            class_name,
+            function_name,
+            is_critical=is_critical,
+            exception_name="ThreadStoppedException",
         )
