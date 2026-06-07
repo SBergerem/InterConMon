@@ -94,6 +94,7 @@ class AppLogger:
             if details is not None:
                 json_text = json.dumps(details, ensure_ascii=False)
                 json_text = " ".join(json_text.split())
+                json_text = json_text.replace("\\n", "")
                 formatted_message = f"{formatted_message} | " f"{json_text}"
 
             match log_level:
