@@ -12,7 +12,7 @@ from sqlite3 import Cursor
 
 
 def log_database_statement(class_name: str, function_name: str, outer_cursor: Cursor, details: dict[str, object] | None = None) -> None:
-    AppLogger.extended_debug(
+    AppLogger.detailed_debug(
         LogType.DATABASE,
         "Executing SQL Statement",
         class_name,
