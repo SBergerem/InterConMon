@@ -9,13 +9,14 @@ class LogEntryRepository(BaseRepository):
 
     # Can't log here, because it would result in log looping
     def _save_internal(self, cursor: Cursor, log_entries: list[LogEntry]) -> None:
+        sql: str = ""
+        params: list[tuple[str, str, str, str, str, str, str | None, int | None, str | None]] = []
         try:
             sql = """
                 INSERT INTO logs (date_time, log_level, log_type, log_message, class_name, function_name, related_object_type, related_object_id, details_json)        
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
 
-            params: list[tuple[str, str, str, str, str, str, str | None, int | None, str | None]] = []
             for entry in log_entries:
                 params.append(
                     (
@@ -33,9 +34,10 @@ class LogEntryRepository(BaseRepository):
 
             cursor.executemany(sql, params)
         except Exception as ex:
-            raise DBOperationFailedException(str(ex), "LogEntryRepository", "_save_internal")
+            raise DBOperationFailedException("LogEntryRepository", "_save_internal", sql, params, str(ex))
 
     def _load_internal(self, cursor: Cursor, internal_where_statement: str = "") -> list[LogEntry]:
+        sql: str = ""
         try:
             sql: str = f"""
                 SELECT id, date_time, log_level, log_type, log_message, class_name, function_name, 
@@ -75,7 +77,7 @@ class LogEntryRepository(BaseRepository):
 
             return result
         except Exception as ex:
-            raise DBOperationFailedException(str(ex), "LogEntryRepository", "_load_internal")
+            raise DBOperationFailedException("LogEntryRepository", "_load_internal", sql, (), str(ex))
 
     def save(self, log_entries: list[LogEntry], outer_cursor: Cursor | None = None) -> None:
         self._database_manager.run_in_transaction(lambda cursor: self._save_internal(cursor, log_entries), outer_cursor)

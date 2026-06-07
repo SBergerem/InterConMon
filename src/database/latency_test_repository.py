@@ -8,27 +8,35 @@ from exceptions import DBOperationFailedException
 class LatencyTestRepository(BaseRepository):
 
     def _save_internal(self, cursor: Cursor, latency_tests: list[LatencyTestResult]) -> None:
+        sql: str = ""
+        params: tuple[int, str, str, int, float | None, str | None] = (0, "", "", 0, None, None)
         try:
             sql = """
                     INSERT INTO latency_tests (group_id, date_time, target, success, latency_ms, error_message)  
                     VALUES (?, ?, ?, ?, ?, ?)                 
                 """
 
-            params: list[tuple[int, str, str, int, float | None, str | None]] = []
             for test in latency_tests:
-                params.append((test.group_id, test.date_time, test.target, int(test.success), test.latency_ms, test.error_message))
+                params = (test.group_id, test.date_time, test.target, int(test.success), test.latency_ms, test.error_message)
 
-            cursor.executemany(sql, params)
-            self._log_statement(
-                "LatencyTestRepository",
-                "save",
-                cursor,
-                {"sql": sql, "params": params},
-            )
+                cursor.execute(sql, params)
+
+                if cursor.lastrowid is None:
+                    raise Exception("Could not calculate latency_test_id")
+
+                test.set_latency_test_id(cursor.lastrowid)
+
+                self._log_statement(
+                    "LatencyTestRepository",
+                    "save",
+                    cursor,
+                    {"sql": sql, "params": params},
+                )
         except Exception as ex:
-            raise DBOperationFailedException(str(ex), "LatencyTestRepository", "_save_internal")
+            raise DBOperationFailedException("LatencyTestRepository", "_save_internal", sql, params, str(ex))
 
     def _load_internal(self, cursor: Cursor, internal_where_statement: str = "") -> list[LatencyTestResult]:
+        sql: str = ""
         try:
             sql: str = f"""
                 SELECT id, group_id, date_time, target, success, latency_ms, error_message FROM latency_tests {internal_where_statement}
@@ -50,7 +58,7 @@ class LatencyTestRepository(BaseRepository):
 
             return result
         except Exception as ex:
-            raise DBOperationFailedException(str(ex), "LatencyTestRepository", "_load_internal")
+            raise DBOperationFailedException("LatencyTestRepository", "_load_internal", sql, (), str(ex))
 
     def save(self, latency_tests: list[LatencyTestResult]) -> None:
         self._database_manager.run_in_transaction(lambda cursor: self._save_internal(cursor, latency_tests))

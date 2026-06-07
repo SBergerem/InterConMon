@@ -18,7 +18,6 @@ class Runner:
     def __init__(self, database_manager: DatabaseManager, app_settings: AppSettings) -> None:
         self._loop_thread: Thread | None = None
         self._stop_event: Event = Event()
-        self._database_manager: DatabaseManager = database_manager
         self._app_settings: AppSettings = app_settings
         self._latency_test_repository: LatencyTestRepository = LatencyTestRepository(database_manager)
         self._latency_test_group_repository: LatencyTestGroupRepository = LatencyTestGroupRepository(database_manager)
@@ -38,7 +37,7 @@ class Runner:
                     latency_result = self._run_latency_tests(network_checker, latency_test_settings.get_targets())
 
                     if self._stop_event.is_set():
-                        raise ThreadStoppedException(LogType.SYSTEM, "Runner", "_loop")
+                        raise ThreadStoppedException("Runner", "_loop", "self._loop_thread")
 
                     max_failed_count: int = latency_test_settings.get_max_failed_group_test_count()
                     self._run_outage_detection(outage_detector, max_failed_count, latency_result)
@@ -46,8 +45,8 @@ class Runner:
 
                 self._stop_event.wait(0.1)
 
-            raise ThreadStoppedException(LogType.SYSTEM, "Runner", "_loop")  # Because it can only end, when the stop was requested.
-        except CustomException:
+            raise ThreadStoppedException("Runner", "_loop", "self._loop_thread")  # Because it can only end, when the stop was requested.
+        except ThreadStoppedException:
             pass
         except Exception as ex:
             AppLogger.error(LogType.SCAN, str(ex), "Runner", "_loop")
@@ -69,10 +68,9 @@ class Runner:
 
         if len(targets) == 0:
             raise CustomException(
-                "No targets configured",
-                LogType.SCAN,
                 "Runner",
                 "_run_latency_test_group",
+                "No targets configured",
             )
 
         success_list: list[bool] = []
@@ -130,14 +128,14 @@ class Runner:
             AppLogger.info(LogType.OUTAGE, "Outage started", "Runner", "_run_outage_detection")
 
         if detector_result.change_state == OutageChangeState.ENDED.value:
-            result_id: int = self._outage_repository.save([detector_result])
+            self._outage_repository.save([detector_result])
             AppLogger.info(
                 LogType.OUTAGE,
                 "Outage ended",
                 "Runner",
                 "_run_outage_detection",
                 related_object_type="OutageDetectorResult",
-                related_object_id=result_id,
+                related_object_id=detector_result.id,
             )
 
         AppLogger.debug(LogType.SYSTEM, detector_result.connection_state, "Runner", "_run_outage_detection")

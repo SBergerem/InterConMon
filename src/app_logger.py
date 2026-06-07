@@ -85,7 +85,7 @@ class AppLogger:
             formatted_message: str = (
                 f"{"":<11}  | "
                 f"{"[" + log_type.value.upper() + "]":<12}  | "
-                f"{class_name:<20} | "
+                f"{class_name:<30} | "
                 f"{function_name:<30} | "
                 f"{message}"
             )
@@ -93,7 +93,7 @@ class AppLogger:
             match log_level:
                 case LogLevel.INFO:
                     formatted_message: str = (
-                        f"{"":<11}  | " f"{"[" + log_type.value.upper() + "]":<12}  | " f"{"-":<20} | " f"{"-":<30} | " f"{message}"
+                        f"{"":<11}  | " f"{"[" + log_type.value.upper() + "]":<12}  | " f"{"-":<30} | " f"{"-":<30} | " f"{message}"
                     )
 
                     cls._logger.info(formatted_message)
@@ -109,7 +109,7 @@ class AppLogger:
                     formatted_message: str = (
                         f"{"(EXTENDED) ":<11}  | "
                         f"{"[" + log_type.value.upper() + "]":<12}  | "
-                        f"{class_name:<20} | "
+                        f"{class_name:<30} | "
                         f"{function_name:<30} | "
                         f"{message}"
                     )
@@ -119,7 +119,7 @@ class AppLogger:
                     formatted_message: str = (
                         f"{"(DETAILED) ":<11}  | "
                         f"{"[" + log_type.value.upper() + "]":<12}  | "
-                        f"{class_name:<20} | "
+                        f"{class_name:<30} | "
                         f"{function_name:<30} | "
                         f"{message}"
                     )
@@ -156,7 +156,7 @@ class AppLogger:
                 formatted_message: str = (
                     f"{"":<11}  | "
                     f"{"[" + log_type.value.upper() + "]":<12}  | "
-                    f"{class_name:<20} | "
+                    f"{class_name:<30} | "
                     f"{function_name:<30} | "
                     f"Could not write log entry (message: {message}) to database: {ex}"
                 )

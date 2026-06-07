@@ -7,8 +7,9 @@ class DatabaseInitializerRepository(BaseRepository):
 
     # Initializes the database. If a table doesn't exists, it creates it.
     def _initialize_database_intern(self, cursor: Cursor) -> None:
+        sql: str = ""
         try:
-            sql: str = """
+            sql = """
                 CREATE TABLE IF NOT EXISTS latency_test_groups(
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     start_time TEXT NOT NULL,
@@ -109,7 +110,7 @@ class DatabaseInitializerRepository(BaseRepository):
                 {"sql": sql, "params": {}},
             )
         except Exception as ex:
-            raise DBOperationFailedException(str(ex), "DatabaseInitializerRepository", "_initialize_database_intern")
+            raise DBOperationFailedException("DatabaseInitializerRepository", "_initialize_database_intern", sql, (), str(ex))
 
     def initialize_database(self) -> None:
         self._database_manager.run_in_transaction(lambda cursor: self._initialize_database_intern(cursor))

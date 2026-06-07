@@ -8,6 +8,18 @@ from app_settings import AppSettings
 import time
 from database.app_settings_repository import AppSettingsRepository
 from database.database_initializer_repository import DatabaseInitializerRepository
+from sqlite3 import Cursor
+
+
+def log_database_statement(class_name: str, function_name: str, outer_cursor: Cursor, details: dict[str, object] | None = None) -> None:
+    AppLogger.extended_debug(
+        LogType.DATABASE,
+        "Executing SQL Statement",
+        class_name,
+        function_name,
+        details=details,
+        outer_cursor=outer_cursor,
+    )
 
 
 # Initializing all relevant managers, the start config and the logger and return the managers
@@ -19,6 +31,7 @@ def initialize_program() -> tuple[DatabaseManager, AppSettings]:
     config: AppStartConfig = ConfigManager.load_config()
 
     database_manager = DatabaseManager(config.database_config.path)
+    database_manager.set_logging_callback(log_database_statement)
     database_initializer_repository: DatabaseInitializerRepository = DatabaseInitializerRepository(database_manager)
     database_initializer_repository.initialize_database()
 

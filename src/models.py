@@ -48,6 +48,9 @@ class LatencyTestResult:
     latency_ms: float | None
     error_message: str | None
 
+    def set_latency_test_id(self, latency_test_id: int) -> None:
+        self.id = latency_test_id
+
 
 @dataclass
 class LatencyTestGroupResult:
@@ -76,6 +79,9 @@ class OutageDetectorResult:
     duration_sec: float | None
     started_group_id: int | None
     ended_group_id: int | None
+
+    def set_outage_id(self, outage_id: int) -> None:
+        self.id = outage_id
 
 
 @dataclass

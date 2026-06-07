@@ -1,157 +1,85 @@
-from models import LogType
+from typing import Any
 
 
 class CustomException(Exception):
     def __init__(
         self,
-        message: str,
-        log_type: LogType,
         class_name: str,
         function_name: str,
-        is_critical: bool = False,
+        message: str,
         exception_name: str = "Custom exception (General)",
     ) -> None:
-
-        # if is_critical:
-        # AppLogger.critical(
-        #    log_type,
-        #    f"[{exception_name}] -> {message}",
-        #    class_name,
-        #    function_name,
-        #    skip_database=True,
-        # )
-        # else:
-        # AppLogger.error(
-        #    log_type,
-        #    f"[{exception_name}] -> {message}",
-        #    class_name,
-        #    function_name,
-        #    skip_database=True,
-        # )
-
-        super().__init__(message)
+        super().__init__(f"[{exception_name}] (Class: {class_name} Func: {function_name}) -> {message}")
 
 
 class DatabaseConnectionException(CustomException):
-    def __init__(
-        self,
-        class_name: str,
-        function_name: str,
-        is_critical: bool = False,
-    ) -> None:
+    def __init__(self, class_name: str, function_name: str, message: str) -> None:
         super().__init__(
-            "No database connection",
-            LogType.DATABASE,
             class_name,
             function_name,
+            f"Database connection error",
             exception_name="DatabaseConnectionException",
-            is_critical=is_critical,
         )
 
 
 class DBConIsNoneException(CustomException):
-    def __init__(
-        self,
-        class_name: str,
-        function_name: str,
-        is_critical: bool = False,
-    ) -> None:
+    def __init__(self, class_name: str, function_name: str) -> None:
         super().__init__(
-            "No database connection",
-            LogType.DATABASE,
             class_name,
             function_name,
+            f"No Database connection",
             exception_name="DBConIsNoneException",
-            is_critical=is_critical,
         )
 
 
 class DBOperationFailedException(CustomException):
-    def __init__(
-        self,
-        message: str,
-        class_name: str,
-        function_name: str,
-        is_critical: bool = False,
-    ) -> None:
+    def __init__(self, class_name: str, function_name: str, sql: str, params: Any, message: str) -> None:
+
+        sql = " ".join(sql.split())
+
         super().__init__(
-            message, LogType.DATABASE, class_name, function_name, exception_name="DBOperationFailedException", is_critical=is_critical
+            class_name,
+            function_name,
+            f"SQL operation failed! \n    SQL: {sql} \n    Params: {params} \n    Reason: {message}",
+            exception_name="DBOperationFailedException",
         )
 
 
 class ObjectIsNoneException(CustomException):
-    def __init__(
-        self,
-        object_name: str,
-        object_type: str,
-        log_type: LogType,
-        class_name: str,
-        function_name: str,
-        is_critical: bool = False,
-    ) -> None:
+    def __init__(self, class_name: str, function_name: str, object_name: str, object_type: str) -> None:
         super().__init__(
-            f"Object {object_name} of type {object_type} is None",
-            log_type,
             class_name,
             function_name,
-            is_critical=is_critical,
+            f"Object {object_name} of type {object_type} is None",
             exception_name="ObjectIsNoneException",
         )
 
 
 class ObjectIsNotPreparedException(CustomException):
-    def __init__(
-        self,
-        object_name: str,
-        object_type: str,
-        log_type: LogType,
-        class_name: str,
-        function_name: str,
-        is_critical: bool = False,
-    ) -> None:
+    def __init__(self, class_name: str, function_name: str, object_name: str, object_type: str) -> None:
         super().__init__(
-            f"Can't execute function. Object {object_name} of type {object_type} is not prepared",
-            log_type,
             class_name,
             function_name,
-            is_critical=is_critical,
+            f"Can't execute function. Object {object_name} of type {object_type} is not prepared",
             exception_name="ObjectIsNotPreparedException",
         )
 
 
 class ThreadIsAlreadyRunningException(CustomException):
-    def __init__(
-        self,
-        object_name: str,
-        object_type: str,
-        log_type: LogType,
-        class_name: str,
-        function_name: str,
-        is_critical: bool = False,
-    ) -> None:
+    def __init__(self, class_name: str, function_name: str, thread_name: str) -> None:
         super().__init__(
-            f"Can't start thread. Object {object_name} of type {object_type} is already running as thread",
-            log_type,
             class_name,
             function_name,
-            is_critical=is_critical,
+            f"Can't start thread {thread_name}. It is already running",
             exception_name="ThreadIsAlreadyRunningException",
         )
 
 
 class ThreadStoppedException(CustomException):
-    def __init__(
-        self,
-        log_type: LogType,
-        class_name: str,
-        function_name: str,
-        is_critical: bool = False,
-    ) -> None:
+    def __init__(self, class_name: str, function_name: str, thread_name: str) -> None:
         super().__init__(
-            f"Thread stopped",
-            log_type,
             class_name,
             function_name,
-            is_critical=is_critical,
+            f"Thread {thread_name} stopped",
             exception_name="ThreadStoppedException",
         )
