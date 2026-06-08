@@ -10,9 +10,9 @@ The project is developed step by step as a learning and homelab project. The ord
 
 Goal: Build the basic monitoring logic and store tests reliably.
 
-Status: Mostly in progress / partially completed.
+Status: Mostly completed.
 
-Tasks:
+Completed:
 
 * Basic latency check
 * Platform-specific ping handling
@@ -28,25 +28,41 @@ Tasks:
 * Add structured application logging
 * Add first database-backed application settings support
 
+Still possible later:
+
+* Improve validation around settings and loaded database values
+* Add more tests around outage edge cases
+* Add migration strategy for schema changes
+
 ---
 
 ## Phase 2 – Internal Architecture Cleanup
 
 Goal: Make the internal structure cleaner before adding bigger features.
 
-Tasks:
+Status: Mostly completed for the current development stage.
 
-* Clean up component responsibilities
-* Keep startup, runtime, persistence, logging, and settings logic clearly separated
-* Prepare the codebase for moving the monitoring loop into `Runner`
-* Reduce static/class-based structure where real object state is useful
-* Clean up dependency flow between components
-* Avoid circular imports
-* Improve exception handling
+Completed:
+
+* Cleaner component responsibilities
+* `main.py` focuses on startup and shutdown
+* `Runner` owns the monitoring loop
+* Database-specific SQL logic moved into repositories
+* `DatabaseManager` reduced to connection, transaction, lock, rollback and callback handling
+* Shared transaction handling for latency test groups and their individual tests
+* SQL statement logging through callback to avoid circular imports
+* `LogEntryRepository` avoids logging itself to prevent logging recursion
+* Improved custom exception handling with class and function context
+* Cleaner start/stop behavior for the runner thread
+
+Ongoing:
+
+* Continue keeping dependency flow clean
 * Keep Pylance/type checking clean
-* Improve internal documentation
+* Improve internal documentation as the project grows
+* Avoid unnecessary abstractions until the project actually needs them
 
-Planned direction:
+Current structure:
 
 ```text
 main.py
@@ -71,28 +87,40 @@ Runner
 
 Goal: Make runtime settings configurable and persistent.
 
-Tasks:
+Status: In progress / partially completed.
+
+Completed:
 
 * Store monitoring settings in SQLite
 * Load settings on application startup
-* Save changed settings back to SQLite
-* Add default settings when no settings exist
-* Add settings for latency targets
-* Add settings for monitoring interval
+* Save settings back to SQLite on shutdown
+* Add settings for server latency checks
+* Add settings for gateway checks
+* Add settings for monitoring intervals
 * Add settings for outage detection threshold
-* Add settings for logging levels
-* Validate loaded settings
-* Handle corrupted or missing settings safely
+* Add enabled/disabled flags for checks
+* Store settings as JSON text in SQLite
 
-Example planned settings:
+Current setting examples:
 
 ```text
+latency_test_settings_enabled
 latency_test_settings_targets
 latency_test_settings_interval_seconds
-outage_detection_max_failed_group_test_count
-logging_enabled_console_levels
-logging_enabled_database_levels
+gateway_test_enabled
+gateway_test_targets
+gateway_test_interval_seconds
+outage_check_enabled
+outage_check_max_failed_group_test_count
 ```
+
+Still planned:
+
+* Add settings for logging levels through the runtime settings system
+* Add default settings when no settings exist
+* Validate loaded settings more strictly
+* Handle corrupted or missing settings safely
+* Prepare settings for editing through the web interface
 
 ---
 
@@ -100,50 +128,73 @@ logging_enabled_database_levels
 
 Goal: Move the active monitoring runtime out of `main.py` and into `Runner`.
 
-At the moment, parts of the monitoring flow are still controlled directly by `main.py`. In the long term, `main.py` should mainly prepare the application and start the runtime. The `Runner` should become responsible for the repeated monitoring loop.
+Status: Mostly completed.
 
-Planned direction:
+Completed:
 
-```text
-main.py
-→ load base configuration
-→ initialize database
-→ initialize logger
-→ load application settings
-→ create Runner
-→ start Runner
-→ handle shutdown
+* Monitoring loop moved into `Runner`
+* `Runner.run()` starts the monitoring thread
+* `Runner.stop()` requests shutdown and joins the thread
+* `main.py` handles startup and shutdown
+* `Runner` uses database-backed settings
+* `Runner` uses configured server latency targets
+* `Runner` uses configured gateway targets
+* `Runner` uses configured monitoring intervals
+* `Runner` uses configured outage detection settings
+* `KeyboardInterrupt` can stop the application cleanly
+* Runner structure is ready to run alongside a future web interface
 
-Runner
-→ run monitoring loop
-→ load or receive current settings
-→ run latency test groups
-→ store latency tests
-→ call OutageDetector
-→ store outage information
-→ wait for the next interval
-→ stop cleanly when requested
-```
+Still planned:
 
-Tasks:
-
-* Move repeated monitoring loop logic from `main.py` into `Runner`
-* Add a clear `run()` method to `Runner`
-* Add a clean stopping mechanism, for example `stop()`
-* Keep `main.py` focused on startup and shutdown
-* Make `Runner` use database-backed settings
-* Make `Runner` use configured latency targets
-* Make `Runner` use configured monitoring interval
-* Make `Runner` use configured outage detection settings
-* Ensure `KeyboardInterrupt` can stop the application cleanly
-* Prepare the structure for a later background thread
-* Avoid adding thread complexity before the normal runner flow is stable
-
-Later, the `Runner` may run in its own background thread so that the monitoring loop can run alongside the local web interface.
+* Allow runtime settings to be changed while the runner is active
+* Make the future web server interact safely with the runner
+* Improve status reporting from the runner to the future web interface
 
 ---
 
-## Phase 5 – Local Web Interface
+## Phase 5 – Gateway and Target Type Monitoring
+
+Goal: Distinguish external internet checks from local gateway/router checks.
+
+Status: Mostly completed for the first version.
+
+Completed:
+
+* Added `TestTargetType`
+* Added server and gateway target types
+* Added gateway test settings
+* Added separate gateway check interval
+* Added gateway enabled/disabled flag
+* Extended latency test groups with target type
+* Extended individual latency tests with target type
+* Extended outage detections with target type
+* Added separate runner cycle for gateway checks
+* Added separate outage detector instance for gateway checks
+* Stored gateway and server checks in the database
+
+Still planned:
+
+* Use gateway state to improve diagnostic interpretation
+* Show server vs gateway state separately in the future web interface
+* Include target type filters in future reports and exports
+* Add automatic gateway detection later if useful and reliable
+
+Example interpretation:
+
+```text
+Gateway reachable, external targets fail
+→ likely external internet/provider problem
+
+Gateway unreachable
+→ likely local network/router problem
+
+Gateway reachable, external targets reachable
+→ connection appears healthy
+```
+
+---
+
+## Phase 6 – Local Web Interface
 
 Goal: Add a browser-based interface for local use.
 
@@ -151,12 +202,14 @@ Tasks:
 
 * Add simple local web server
 * Show current monitoring status
-* Show recent latency test groups
+* Show recent server/internet measurements
+* Show recent gateway/router measurements
 * Show recent outages
 * Show application logs
 * Add basic settings page
 * Allow changing latency targets
-* Allow changing monitoring interval
+* Allow changing gateway targets
+* Allow changing monitoring intervals
 * Allow changing outage detection settings
 * Allow changing logging settings
 
@@ -164,7 +217,7 @@ The web interface is intended for local network or VPN access only.
 
 ---
 
-## Phase 6 – Authentication and Sessions
+## Phase 7 – Authentication and Sessions
 
 Goal: Protect the local web interface.
 
@@ -182,7 +235,7 @@ Tasks:
 
 ---
 
-## Phase 7 – Reports and Exports
+## Phase 8 – Reports and Exports
 
 Goal: Make collected monitoring data easier to review and share.
 
@@ -195,6 +248,7 @@ Tasks:
 * Add date range selection
 * Include outage summaries
 * Include latency statistics
+* Include server and gateway checks separately
 * Include relevant logs or notes
 * Avoid automatically generating unnecessary files in the background
 
@@ -205,18 +259,17 @@ Planned export types:
 
 ---
 
-## Phase 8 – Extended Monitoring
+## Phase 9 – Extended Monitoring
 
-Goal: Add more useful checks beyond simple external ping tests.
+Goal: Add more useful checks beyond simple ping tests.
 
 Tasks:
 
-* Add router/gateway reachability checks
-* Distinguish between local network problems and external internet problems
-* Add multiple target groups
 * Add optional DNS checks
 * Add optional HTTP checks
 * Add optional speed test support
+* Add multiple target groups
+* Add more detailed diagnostic classification
 * Investigate possible official integration options with external measurement tools, if appropriate
 
 Important note:
@@ -225,14 +278,15 @@ Any integration with official broadband measurement tools should only be done th
 
 ---
 
-## Phase 9 – Reporting Dashboard
+## Phase 10 – Reporting Dashboard
 
 Goal: Make the collected data easier to understand.
 
 Tasks:
 
 * Add dashboard overview
-* Show current connection state
+* Show current server/internet connection state
+* Show current gateway/router state
 * Show recent outages
 * Show uptime/downtime summary
 * Show average latency
@@ -244,7 +298,7 @@ Tasks:
 
 ---
 
-## Phase 10 – Docker Support
+## Phase 11 – Docker Support
 
 Goal: Make the already working application deployable as a small homelab service.
 
@@ -266,7 +320,7 @@ Tasks:
 
 ---
 
-## Phase 11 – Cleanup and Release Preparation
+## Phase 12 – Cleanup and Release Preparation
 
 Goal: Prepare the project for a usable first release.
 
@@ -301,6 +355,7 @@ Possible future ideas:
 * Optional Prometheus/Grafana integration
 * Multi-user support
 * More detailed network diagnostics
+* Tamper-evident data integrity checks
 
 These ideas are not part of the immediate scope and may or may not be implemented.
 
@@ -310,12 +365,10 @@ These ideas are not part of the immediate scope and may or may not be implemente
 
 The current priority is:
 
-1. Keep the existing monitoring flow stable
-2. Finish database-backed settings
-3. Move the monitoring loop into `Runner`
-4. Keep `main.py` focused on startup
-5. Prepare clean start/stop behavior for the monitoring loop
-6. Build the local web interface foundation
-7. Add authentication, settings management, and exports
-8. Add Docker support after the application structure is clearer
-
+1. Keep the existing server and gateway monitoring flow stable
+2. Finish the database-backed settings behavior
+3. Prepare the local web interface foundation
+4. Add a settings page for monitoring, gateway and outage settings
+5. Add authentication and session handling
+6. Add browser-based PDF and Excel exports
+7. Add Docker support after the application structure is clearer
