@@ -60,21 +60,6 @@ Current behavior:
 * Calculates outage duration.
 * Returns an `OutageDetectorResult`.
 
-### DatabaseManager
-
-`DatabaseManager` handles SQLite persistence.
-
-Current responsibilities:
-
-* Initializes database tables.
-* Saves latency test groups.
-* Saves individual latency tests.
-* Saves completed outages.
-* Saves application logs.
-* Saves and loads application settings.
-
-The project currently uses SQLite because it is lightweight, local, easy to deploy, and does not require a separate database server.
-
 ### AppLogger
 
 `AppLogger` provides structured application logging.
@@ -122,17 +107,27 @@ critical
 → severe failure that may stop the program
 ```
 
-### AppSettingsManager
+## Database and Repository Layer
 
-`AppSettingsManager` converts application settings between Python objects and database rows.
+The database layer is split into two responsibilities:
 
-Current behavior:
+### DatabaseManager
 
-* Converts settings objects into database-saveable tuples.
-* Loads JSON settings from SQLite.
-* Converts JSON strings back into Python settings objects.
+The `DatabaseManager` is responsible for the technical database handling only. It manages the database path, opens SQLite connections, enables foreign keys, creates cursors, controls transaction boundaries, commits successful operations, rolls back failed operations and closes connections.
 
-Settings are stored in SQLite as JSON text.
+It also owns the database lock to avoid unsafe concurrent write access. Repositories do not open or close database connections themselves.
+
+SQL statement logging is connected through an optional callback. This keeps the database layer independent from the application logger and prevents circular imports.
+
+### Repositories
+
+Repository classes contain the table-specific SQL logic. Each repository is responsible for one area of stored data, for example latency test groups, latency test results, outages, app settings or log entries.
+
+Repositories use the `DatabaseManager` to execute their work inside a transaction. Public `save()` and `load()` methods start their own transaction. Additional `save_in_transaction()` methods can reuse an existing cursor when multiple repository operations must be committed or rolled back together.
+
+For latency monitoring, the latency test group and its individual latency test results are saved in one shared transaction. If saving the individual test results fails, the previously inserted group is rolled back as well. This prevents incomplete measurement data.
+
+The `LogEntryRepository` does not log its own SQL statements, because doing so would create an endless logging loop.
 
 ## Database Tables
 
