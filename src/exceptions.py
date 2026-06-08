@@ -19,7 +19,7 @@ class DatabaseConnectionException(CustomException):
         super().__init__(
             class_name,
             function_name,
-            f"Database connection error",
+            f"Database connection error. \n    Reason: {message}",
             exception_name="DatabaseConnectionException",
         )
 
@@ -55,6 +55,15 @@ class ObjectIsNoneException(CustomException):
             f"Object {object_name} of type {object_type} is None",
             exception_name="ObjectIsNoneException",
         )
+        
+class ListIsEmptyException(CustomException):
+    def __init__(self, class_name: str, function_name: str, object_name: str, object_type: str) -> None:
+        super().__init__(
+            class_name,
+            function_name,
+            f"List {object_name} of type {object_type} is empty",
+            exception_name="ObjectIsNoneException",
+        )
 
 
 class ObjectIsNotPreparedException(CustomException):
@@ -84,4 +93,13 @@ class ThreadStoppedException(CustomException):
             function_name,
             f"Thread {thread_name} stopped",
             exception_name="ThreadStoppedException",
+        )
+
+class ValueInvalidException(CustomException):
+    def __init__(self, class_name: str, function_name: str, value: Any, message: str) -> None:
+        super().__init__(
+            class_name,
+            function_name,
+            f"Can't set value {value}. \n    Reason: {message} ",
+            exception_name="ValueInvalidException",
         )

@@ -1,11 +1,5 @@
 from datetime import datetime
-from models import (
-    OutageDetectorResult,
-    ConnectionState,
-    OutageChangeState,
-    LatencyTestGroupResult,
-    LogType,
-)
+from models import OutageDetection, ConnectionState, OutageChangeState, LatencyTestGroup, LogType, TestTargetType
 from app_logger import AppLogger
 
 
@@ -18,19 +12,19 @@ class OutageDetector:
         self._started_test_group_id: int | None = None
         self._max_failed_group_test_count: int = 3
 
-    def process_group_result(self, group_result: LatencyTestGroupResult) -> OutageDetectorResult:
+    def check_group(self, group: LatencyTestGroup, test_target_type: TestTargetType) -> OutageDetection:
         AppLogger.extended_debug(
             LogType.OUTAGE,
             "Started outage check",
             "OutageDetector",
-            "process_group_result",
-            related_object_type="LatencyTestGroupResult",
-            related_object_id=group_result.id,
+            "process_group",
+            related_object_type="LatencyTestGroup",
+            related_object_id=group.id,
         )
 
-        test_succeeded: bool = group_result.any_success
+        test_succeeded: bool = group.any_success
         last_connection_state: ConnectionState = self._current_connection_state
-        connection_test_date_time: str = group_result.end_time
+        connection_test_date_time: str = group.end_time
         change_state: OutageChangeState = OutageChangeState.NONE
         start_time: str | None = None
         end_time: str = ""
@@ -46,7 +40,7 @@ class OutageDetector:
 
                 if start_time is not None and end_time:
                     duration_sec = (datetime.fromisoformat(end_time) - datetime.fromisoformat(start_time)).total_seconds()
-                ended_group_id = group_result.id
+                ended_group_id = group.id
                 started_group_id = self._started_test_group_id
 
             self._current_connection_state = ConnectionState.ONLINE
@@ -55,10 +49,10 @@ class OutageDetector:
             self._started_test_group_id = None
         else:
             if self._first_failed_test_time is None:
-                self._first_failed_test_time = group_result.start_time
+                self._first_failed_test_time = group.start_time
 
             if self._started_test_group_id is None:
-                self._started_test_group_id = group_result.id
+                self._started_test_group_id = group.id
             started_group_id = self._started_test_group_id
 
             self._failed_groups_test_count += 1
@@ -74,16 +68,17 @@ class OutageDetector:
             LogType.OUTAGE,
             "Ended outage check",
             "OutageDetector",
-            "process_group_result",
-            related_object_type="LatencyTestGroupResult",
-            related_object_id=group_result.id,
+            "process_group",
+            related_object_type="LatencyTestGroup",
+            related_object_id=group.id,
         )
 
-        return OutageDetectorResult(
+        return OutageDetection(
             0,
             self._current_connection_state.value,
             connection_test_date_time,
             change_state.value,
+            test_target_type.value,
             start_time,
             end_time,
             duration_sec,

@@ -15,7 +15,7 @@ This project is currently in early development.
 The current version already contains the first working internal monitoring flow:
 
 * Basic latency checks
-* Grouped latency test results
+* Grouped latency tests
 * SQLite database initialization
 * Storage of latency test groups and individual latency tests
 * Outage detection based on failed test groups
@@ -197,7 +197,7 @@ Important cursor rule:
 ```text
 SELECT:
 - execute query
-- fetch result
+- fetch tests
 - then log
 
 INSERT:
@@ -246,7 +246,7 @@ The database currently includes or is planned to include data such as:
 * Detected outages
 * Application/event logs
 * Application settings
-* Speed test results
+* Speed tests
 * User/login information
 * Session data
 
@@ -319,10 +319,10 @@ The project will be built in small steps.
 Current and near-term direction:
 
 1. Basic connection check
-2. Define result structures
+2. Define test structures
 3. Design first database tables
 4. Add SQLite database initialization
-5. Store check results in SQLite
+5. Store check tests in SQLite
 6. Add structured logging
 7. Add database-backed settings
 8. Repeated monitoring loop
@@ -359,7 +359,7 @@ main.py
 Runner
 → owns monitoring loop
 → runs latency test groups
-→ stores results
+→ stores tests
 → triggers outage detection
 → stores outage data
 → waits for the next interval

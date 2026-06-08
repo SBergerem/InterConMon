@@ -8,7 +8,7 @@ The project is developed step by step as a learning and homelab project. The ord
 
 ## Phase 1 – Core Monitoring Foundation
 
-Goal: Build the basic monitoring logic and store results reliably.
+Goal: Build the basic monitoring logic and store tests reliably.
 
 Status: Mostly in progress / partially completed.
 
@@ -18,10 +18,10 @@ Tasks:
 * Platform-specific ping handling
   * Windows with `ping3`
   * Linux/macOS with system `ping`
-* Result models for latency tests
+* Models for latency tests
 * Group multiple latency tests into one test group
 * Store latency test groups in SQLite
-* Store individual latency test results in SQLite
+* Store individual latency tests in SQLite
 * Add basic repeated monitoring flow
 * Add outage detection logic
 * Store completed outages in SQLite
@@ -59,7 +59,7 @@ main.py
 Runner
 → owns monitoring loop
 → runs test groups
-→ stores results
+→ stores tests
 → triggers outage detection
 → stores outage data
 → waits for next interval
@@ -118,7 +118,7 @@ Runner
 → run monitoring loop
 → load or receive current settings
 → run latency test groups
-→ store latency results
+→ store latency tests
 → call OutageDetector
 → store outage information
 → wait for the next interval

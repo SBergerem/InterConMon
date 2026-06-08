@@ -1,4 +1,4 @@
-from models import LatencyTestGroupResult
+from models import LatencyTestGroup
 from database.base_repository import BaseRepository
 from sqlite3 import Cursor
 from typing import Any
@@ -7,22 +7,23 @@ from exceptions import DBOperationFailedException
 
 class LatencyTestGroupRepository(BaseRepository):
 
-    def _save_internal(self, cursor: Cursor, latency_test_group_results: list[LatencyTestGroupResult]) -> None:
+    def _save_internal(self, cursor: Cursor, latency_test_groups: list[LatencyTestGroup]) -> None:
         sql: str = ""
-        params: tuple[str | None, str, float | None, int, int] = ("", "", None, 0, 0)
+        params: tuple[str | None, str, float | None, int, int, str] = ("", "", None, 0, 0, "")
         try:
             sql = """
-                    INSERT INTO latency_test_groups (start_time, end_time, time_needed_sec, any_success, group_success) 
-                    VALUES (?, ?, ?, ?, ?)
+                    INSERT INTO latency_test_groups (start_time, end_time, time_needed_sec, any_success, group_success, test_target_type) 
+                    VALUES (?, ?, ?, ?, ?, ?)
             """
 
-            for result in latency_test_group_results:
-                params: tuple[str | None, str, float | None, int, int] = (
-                    result.start_time,
-                    result.end_time,
-                    result.time_needed_sec,
-                    int(result.any_success),
-                    int(result.group_success),
+            for group in latency_test_groups:
+                params = (
+                    group.start_time,
+                    group.end_time,
+                    group.time_needed_sec,
+                    int(group.any_success),
+                    int(group.group_success),
+                    group.test_target_type,
                 )
 
                 cursor.execute(sql, params)
@@ -39,16 +40,16 @@ class LatencyTestGroupRepository(BaseRepository):
                     {"sql": sql, "params": params},
                 )
 
-                result.set_group_id(group_id)
+                group.set_group_id(group_id)
         except Exception as ex:
             raise DBOperationFailedException("LatencyTestGroupRepository", "_save_internal", sql, params, str(ex))
 
-    def _load_internal(self, cursor: Cursor, internal_where_statement: str = "") -> list[LatencyTestGroupResult]:
+    def _load_internal(self, cursor: Cursor, internal_where_statement: str = "") -> list[LatencyTestGroup]:
         sql: str = ""
         try:
             sql = f"""
-                SELECT id, start_time, end_time, time_needed_sec, any_success, 
-                group_success FROM latency_test_groups {internal_where_statement}
+                SELECT id, start_time, end_time, time_needed_sec, any_success,
+                group_success, test_target_type FROM latency_test_groups {internal_where_statement}
             """
 
             cursor.execute(sql)
@@ -61,19 +62,21 @@ class LatencyTestGroupRepository(BaseRepository):
                 {"sql": sql, "params": {}, "row_count": len(rows)},
             )
 
-            result: list[LatencyTestGroupResult] = []
-            for id, start_time, end_time, time_needed_sec, any_success, group_success in rows:
-                result.append(LatencyTestGroupResult(id, start_time, end_time, time_needed_sec, any_success, group_success))
+            groups: list[LatencyTestGroup] = []
+            for id, start_time, end_time, time_needed_sec, any_success, group_success, test_target_type in rows:
+                groups.append(
+                    LatencyTestGroup(id, start_time, end_time, time_needed_sec, any_success, group_success, test_target_type)
+                )
 
-            return result
+            return groups
         except Exception as ex:
             raise DBOperationFailedException("LatencyTestGroupRepository", "_load_internal", sql, (), str(ex))
 
-    def save(self, latency_test_group_results: list[LatencyTestGroupResult]) -> None:
-        return self._database_manager.run_in_transaction(lambda cursor: self._save_internal(cursor, latency_test_group_results))
+    def save(self, latency_test_groups: list[LatencyTestGroup]) -> None:
+        return self._database_manager.run_in_transaction(lambda cursor: self._save_internal(cursor, latency_test_groups))
 
-    def save_in_transaction(self, latency_test_group_results: list[LatencyTestGroupResult], cursor: Cursor) -> None:
-        self._save_internal(cursor, latency_test_group_results)
+    def save_in_transaction(self, latency_test_groups: list[LatencyTestGroup], cursor: Cursor) -> None:
+        self._save_internal(cursor, latency_test_groups)
 
-    def load(self, internal_where_statement: str = "") -> list[LatencyTestGroupResult]:
+    def load(self, internal_where_statement: str = "") -> list[LatencyTestGroup]:
         return self._database_manager.run_in_transaction(lambda cursor: self._load_internal(cursor, internal_where_statement))

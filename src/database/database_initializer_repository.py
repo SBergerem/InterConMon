@@ -16,7 +16,8 @@ class DatabaseInitializerRepository(BaseRepository):
                     end_time TEXT NOT NULL,
                     time_needed_sec REAL NOT NULL,
                     any_success INTEGER NOT NULL,
-                    group_success INTEGER NOT NULL 
+                    group_success INTEGER NOT NULL,
+                    test_target_type TEXT NOT NULL 
                 )
             """
             cursor.execute(sql)
@@ -33,6 +34,7 @@ class DatabaseInitializerRepository(BaseRepository):
                     group_id INTEGER NOT NULL,
                     date_time TEXT NOT NULL,
                     target TEXT NOT NULL,
+                    test_target_type TEXT NOT NULL,
                     success INTEGER NOT NULL,
                     latency_ms REAL,
                     error_message TEXT,
@@ -53,6 +55,7 @@ class DatabaseInitializerRepository(BaseRepository):
                 CREATE TABLE IF NOT EXISTS outages(
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     connection_state TEXT NOT NULL,
+                    test_target_type TEXT NOT NULL,
                     last_connection_test TEXT NOT NULL,
                     change_state TEXT NOT NULL,
                     start_time TEXT NOT NULL,

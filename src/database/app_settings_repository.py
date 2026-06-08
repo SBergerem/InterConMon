@@ -71,11 +71,11 @@ class AppSettingsRepository(BaseRepository):
                 {"sql": sql, "params": {}, "row_count": len(rows)},
             )
 
-            result: AppSettings = AppSettings()
+            app_settings: AppSettings = AppSettings()
             for settings_name, settings_json in rows:
-                result.add_from_strings(settings_name, settings_json)
+                app_settings.add_from_strings(settings_name, settings_json)
 
-            return result
+            return app_settings
         except Exception as ex:
             raise DBOperationFailedException("AppSettingsRepository", "_save_internal", sql, (), str(ex))
 

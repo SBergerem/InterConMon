@@ -47,7 +47,7 @@ class LogEntryRepository(BaseRepository):
             cursor.execute(sql)
             rows: list[Any] = cursor.fetchall()
 
-            result: list[LogEntry] = []
+            log_entries: list[LogEntry] = []
             for (
                 id,
                 date_time,
@@ -60,7 +60,7 @@ class LogEntryRepository(BaseRepository):
                 related_object_id,
                 details_json,
             ) in rows:
-                result.append(
+                log_entries.append(
                     LogEntry(
                         id,
                         date_time,
@@ -75,7 +75,7 @@ class LogEntryRepository(BaseRepository):
                     )
                 )
 
-            return result
+            return log_entries
         except Exception as ex:
             raise DBOperationFailedException("LogEntryRepository", "_load_internal", sql, (), str(ex))
 

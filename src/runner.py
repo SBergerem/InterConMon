@@ -1,13 +1,19 @@
 import time
 from network_checker import NetworkChecker
-from datetime import datetime
 from app_logger import AppLogger
 from database.database_manager import DatabaseManager
 from exceptions import CustomException, ThreadStoppedException
 from outage_detector import OutageDetector
 from threading import Thread, Event
-from models import LatencyTestResult, LatencyTestGroupResult, LogType, OutageDetectorResult, OutageChangeState, ConnectionState
-from app_settings import AppSettings, LatencyTestSettings
+from models import (
+    LatencyTest,
+    LatencyTestGroup,
+    LogType,
+    OutageDetection,
+    OutageChangeState,
+    TestTargetType,
+)
+from app_settings import AppSettings, LatencyTestSettings, GatewayTestSettings, OutageCheckSettings
 from database.latency_test_group_repository import LatencyTestGroupRepository
 from database.latency_test_repository import LatencyTestRepository
 from database.outage_repository import OutageRepository
@@ -28,22 +34,38 @@ class Runner:
     # Main loop of the runner
     def _loop(self) -> None:
         try:
-            outage_detector = OutageDetector()
-            network_checker = NetworkChecker()
             latency_test_settings: LatencyTestSettings = self._app_settings.get_latency_test_settings()
+            outage_check_settings: OutageCheckSettings = self._app_settings.get_outage_check_settings()
+            gateway_test_settings: GatewayTestSettings = self._app_settings.get_gateway_test_settings()
+
+            latency_tests_outage_detector = OutageDetector()
+            gateway_tests_outage_detector = OutageDetector()
 
             next_latency_test: float = 0.0
+            next_gateway_test: float = 0.0
 
             while not self._stop_event.is_set():
                 if next_latency_test < time.time():
-                    latency_result: LatencyTestGroupResult = self._run_latency_tests(network_checker, latency_test_settings.get_targets())
+                    next_latency_test = self._run_latency_test_and_outage_check(
+                        latency_tests_outage_detector,
+                        latency_test_settings.get_targets(),
+                        latency_test_settings.get_enabled(),
+                        outage_check_settings.get_enabled(),
+                        outage_check_settings.get_max_failed_group_test_count(),
+                        latency_test_settings.get_interval_seconds(),
+                        TestTargetType.SERVER,
+                    )
 
-                    if self._stop_event.is_set():
-                        raise ThreadStoppedException("Runner", "_loop", "self._loop_thread")
-
-                    max_failed_count: int = latency_test_settings.get_max_failed_group_test_count()
-                    self._run_outage_detection(outage_detector, max_failed_count, latency_result)
-                    next_latency_test = time.time() + latency_test_settings.get_interval_seconds()
+                if next_gateway_test < time.time():
+                    next_gateway_test = self._run_latency_test_and_outage_check(
+                        gateway_tests_outage_detector,
+                        gateway_test_settings.get_targets(),
+                        gateway_test_settings.get_enabled(),
+                        outage_check_settings.get_enabled(),
+                        outage_check_settings.get_max_failed_group_test_count(),
+                        gateway_test_settings.get_interval_seconds(),
+                        TestTargetType.GATEWAY,
+                    )
 
                 self._stop_event.wait(0.1)
 
@@ -57,101 +79,64 @@ class Runner:
             AppLogger.error(LogType.SCAN, str(ex), "Runner", "_loop")
             self._stop_event.set()
 
-    # Runs all the latency tests and returns the result of these tests
-    def _run_latency_test_group(self, targets: list[str], network_checker: NetworkChecker) -> LatencyTestGroupResult:
-        AppLogger.extended_debug(
-            LogType.SCAN,
-            "Starting latency group test",
-            "Runner",
-            "_run_latency_test_group",
-            details={"targets": targets},
-        )
+    def _run_latency_test_and_outage_check(
+        self,
+        outage_detector: OutageDetector,
+        targets: list[str],
+        latency_test_enabled: bool,
+        outage_check_enabled: bool,
+        max_failed_group_test_count: int,
+        interval_seconds: int,
+        test_target_type: TestTargetType,
+    ) -> float:
+        if latency_test_enabled:
+            test_group: LatencyTestGroup = NetworkChecker.run_test_group(targets, test_target_type)
+            self._database_manager.run_in_transaction(lambda cursor: self._save_latency_tests(cursor, test_group.tests, test_group))
 
-        start: float = time.perf_counter()
-        start_time: str = datetime.now().isoformat()
-        test_results: list[LatencyTestResult] = []
+            if self._stop_event.is_set():
+                raise ThreadStoppedException("Runner", "_run_latency_test_and_outage_check", "self._loop_thread")
 
-        if len(targets) == 0:
-            raise CustomException(
-                "Runner",
-                "_run_latency_test_group",
-                "No targets configured",
-            )
+            if outage_check_enabled:
+                detection: OutageDetection = self._run_outage_detection(
+                    outage_detector, max_failed_group_test_count, test_group, test_target_type
+                )
 
-        success_list: list[bool] = []
+                if detection.change_state == OutageChangeState.ENDED.value:
+                    self._outage_repository.save([detection])
+                    AppLogger.info(
+                        LogType.OUTAGE,
+                        "Outage ended",
+                        "Runner",
+                        "_run_outage_detection",
+                        related_object_type="OutageDetection",
+                        related_object_id=detection.id,
+                    )
 
-        for target in targets:
-            test_result: LatencyTestResult = network_checker.test_latency(target)
-            test_results.append(test_result)
-            success_list.append(test_result.success)
+        return time.time() + interval_seconds
 
-        any_success: bool = any(success_list)
-        group_success: bool = (len(success_list) > 0) and all(success_list)
-        end_time: str = datetime.now().isoformat()
-
-        end: float = time.perf_counter()
-        time_needed_sec: float = end - start
-
-        details: dict[str, object] = {
-            "targets": targets,
-            "any_success": any_success,
-            "group_success": group_success,
-            "time_needed_sec": time_needed_sec,
-        }
-
-        AppLogger.extended_debug(LogType.SCAN, "Ended latency group test", "Runner", "_run_latency_test_group", details=details)
-
-        return LatencyTestGroupResult(
-            0,
-            start_time,
-            end_time,
-            time_needed_sec,
-            any_success,
-            group_success,
-            test_results,
-        )
-
-    # Save the group and the single results in a transaction. So that if something wrent wrong, neither the group nor the single tests get saved
-    def _save_latency_test_results(
-        self, cursor: Cursor, latency_test_results: list[LatencyTestResult], latency_test_group_result: LatencyTestGroupResult
-    ) -> None:
-        self._latency_test_group_repository.save_in_transaction([latency_test_group_result], cursor)
-        self._latency_test_repository.save_in_transaction(latency_test_results, cursor)
-
-    # Collects the test result and the group_id, so we can give it the outage detector
-    def _run_latency_tests(self, network_checker: NetworkChecker, targets: list[str]) -> LatencyTestGroupResult:
-        result: LatencyTestGroupResult = self._run_latency_test_group(targets, network_checker)
-        self._database_manager.run_in_transaction(lambda cursor: self._save_latency_test_results(cursor, result.test_results, result))
-        return result
+    # Save the group and the single tests in a transaction. So that if something wrent wrong, neither the group nor the single tests get saved
+    def _save_latency_tests(self, cursor: Cursor, latency_tests: list[LatencyTest], latency_test_group: LatencyTestGroup) -> None:
+        self._latency_test_group_repository.save_in_transaction([latency_test_group], cursor)
+        self._latency_test_repository.save_in_transaction(latency_tests, cursor)
 
     # Checks for an outage and logs it
     def _run_outage_detection(
         self,
         outage_detector: OutageDetector,
         max_failed_group_test_count: int,
-        latency_test_group_result: LatencyTestGroupResult,
-    ) -> bool:
+        latency_test_group: LatencyTestGroup,
+        test_target_type: TestTargetType,
+    ) -> OutageDetection:
         outage_detector.set_max_failed_group_test_count(max_failed_group_test_count)
 
-        detector_result: OutageDetectorResult = outage_detector.process_group_result(latency_test_group_result)
+        detection: OutageDetection = outage_detector.check_group(latency_test_group, test_target_type)
 
-        if detector_result.change_state == OutageChangeState.STARTED.value:
+        if detection.change_state == OutageChangeState.STARTED.value:
             AppLogger.info(LogType.OUTAGE, "Outage started", "Runner", "_run_outage_detection")
 
-        if detector_result.change_state == OutageChangeState.ENDED.value:
-            self._outage_repository.save([detector_result])
-            AppLogger.info(
-                LogType.OUTAGE,
-                "Outage ended",
-                "Runner",
-                "_run_outage_detection",
-                related_object_type="OutageDetectorResult",
-                related_object_id=detector_result.id,
-            )
+        AppLogger.debug(LogType.SYSTEM, f"{test_target_type.value} {detection.connection_state}", "Runner", "_run_outage_detection")
 
-        AppLogger.debug(LogType.SYSTEM, detector_result.connection_state, "Runner", "_run_outage_detection")
-
-        return detector_result.connection_state == ConnectionState.ONLINE.value
+        return detection
 
     # Checks, if the thread isn't already running. If it's not it's starting the thread
     def run(self) -> None:

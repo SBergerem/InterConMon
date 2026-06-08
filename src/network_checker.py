@@ -5,14 +5,16 @@ import re
 from datetime import datetime
 from typing import Any, Literal
 from ping3 import ping  # type: ignore[import]
-from models import LatencyTestResult, LogType
+from models import LatencyTest, LatencyTestGroup, LogType, TestTargetType
 from app_logger import AppLogger
+from exceptions import ListIsEmptyException
+import time
 
 
 class NetworkChecker:
 
     @classmethod
-    def test_latency(cls, target: str) -> LatencyTestResult:
+    def test_latency(cls, target: str, test_target_type: TestTargetType) -> LatencyTest:
         AppLogger.detailed_debug(
             LogType.SCAN,
             "Starting ping test",
@@ -131,4 +133,54 @@ class NetworkChecker:
                 details={"target": target},
             )
 
-        return LatencyTestResult(0, 0, date_time, target, success, latency_ms, error_message)
+        return LatencyTest(0, 0, date_time, target, test_target_type.value, success, latency_ms, error_message)
+
+    @classmethod
+    def run_test_group(cls, targets: list[str], test_target_type: TestTargetType) -> LatencyTestGroup:
+        if len(targets) == 0:
+            raise ListIsEmptyException("NetworkChecker", "create_group", "latency_tests", "list[LatencyTest]")
+
+        AppLogger.extended_debug(
+            LogType.SCAN,
+            "Starting latency group test",
+            "Runner",
+            "_run_latency_test_group",
+            details={"targets": targets},
+        )
+
+        start: float = time.perf_counter()
+        start_time: str = datetime.now().isoformat()
+        tests: list[LatencyTest] = []
+
+        success_list: list[bool] = []
+        for target in targets:
+            test: LatencyTest = cls.test_latency(target, test_target_type)
+            tests.append(test)
+            success_list.append(test.success)
+
+        any_success: bool = any(success_list)
+        group_success: bool = (len(success_list) > 0) and all(success_list)
+        end_time: str = datetime.now().isoformat()
+
+        end: float = time.perf_counter()
+        time_needed_sec: float = end - start
+
+        details: dict[str, object] = {
+            "targets": targets,
+            "any_success": any_success,
+            "group_success": group_success,
+            "time_needed_sec": time_needed_sec,
+        }
+
+        AppLogger.extended_debug(LogType.SCAN, "Ended latency group test", "Runner", "_run_latency_test_group", details=details)
+
+        return LatencyTestGroup(
+            0,
+            start_time,
+            end_time,
+            time_needed_sec,
+            any_success,
+            group_success,
+            test_target_type.value,
+            tests,
+        )

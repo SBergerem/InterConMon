@@ -1,7 +1,7 @@
 # InterConMon Architecture
 
 InterConMon is a small local internet connection monitoring tool.
-It is designed to run continuously, perform regular latency checks, detect outages, store results in SQLite, and provide structured logs for debugging and later reporting.
+It is designed to run continuously, perform regular latency checks, detect outages, store tests in SQLite, and provide structured logs for debugging and later reporting.
 
 ## Current Architecture Overview
 
@@ -12,7 +12,7 @@ main.py
 → loads configuration
 → initializes database and logging
 → runs monitoring loop
-→ stores latency results
+→ stores latency tests
 → detects outages
 → stores outage information
 ```
@@ -28,7 +28,7 @@ Current behavior:
 * Uses `ping3` on Windows.
 * Uses the system `ping` command on Linux and macOS.
 * Forces `LC_ALL=C` and `LANG=C` on Linux/macOS to make ping output easier to parse.
-* Returns a `LatencyTestResult`.
+* Returns a `LatencyTest`.
 * Logs individual ping tests with `detailed_debug`.
 
 ### Runner
@@ -38,13 +38,13 @@ Current behavior:
 Current behavior:
 
 * Runs latency tests for configured targets.
-* Collects all individual `LatencyTestResult` objects.
+* Collects all individual `LatencyTest` objects.
 * Calculates:
 
   * `any_success`
   * `group_success`
   * `time_needed_sec`
-* Returns a `LatencyTestGroupResult`.
+* Returns a `LatencyTestGroup`.
 * Logs group-level execution with `extended_debug`.
 
 ### OutageDetector
@@ -58,7 +58,7 @@ Current behavior:
 * Starts an outage only after a configured number of failed groups.
 * Detects when an outage ends.
 * Calculates outage duration.
-* Returns an `OutageDetectorResult`.
+* Returns an `OutageDetection`.
 
 ### AppLogger
 
@@ -121,11 +121,11 @@ SQL statement logging is connected through an optional callback. This keeps the 
 
 ### Repositories
 
-Repository classes contain the table-specific SQL logic. Each repository is responsible for one area of stored data, for example latency test groups, latency test results, outages, app settings or log entries.
+Repository classes contain the table-specific SQL logic. Each repository is responsible for one area of stored data, for example latency test groups, latency tests, outages, app settings or log entries.
 
 Repositories use the `DatabaseManager` to execute their work inside a transaction. Public `save()` and `load()` methods start their own transaction. Additional `save_in_transaction()` methods can reuse an existing cursor when multiple repository operations must be committed or rolled back together.
 
-For latency monitoring, the latency test group and its individual latency test results are saved in one shared transaction. If saving the individual test results fails, the previously inserted group is rolled back as well. This prevents incomplete measurement data.
+For latency monitoring, the latency test group and its individual latency tests are saved in one shared transaction. If saving the individual tests fails, the previously inserted group is rolled back as well. This prevents incomplete measurement data.
 
 The `LogEntryRepository` does not log its own SQL statements, because doing so would create an endless logging loop.
 
@@ -146,7 +146,7 @@ Example fields:
 
 ### latency_tests
 
-Stores individual ping/latency test results.
+Stores individual ping/latency tests.
 
 Example fields:
 
@@ -215,8 +215,8 @@ The current monitoring flow is:
 3. Initialize AppLogger
 4. Load application settings
 5. Run latency test group
-6. Save latency test group and individual test results
-7. Pass group result to OutageDetector
+6. Save latency test group and individual tests
+7. Pass group to OutageDetector
 8. Save outage if one ended
 9. Log important events
 10. Wait for the next monitoring interval
@@ -234,7 +234,7 @@ Important rule:
 ```text
 SELECT:
 - execute query
-- fetch result
+- fetch test
 - then log
 
 INSERT:

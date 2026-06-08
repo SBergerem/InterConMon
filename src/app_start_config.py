@@ -46,11 +46,11 @@ class LogConfig:
         ]
 
     def _parse_log_levels(self, level_texts: list[str]) -> list[LogLevel]:
-        result: list[LogLevel] = []
+        log_level: list[LogLevel] = []
 
         for level_text in level_texts:
             try:
-                result.append(LogLevel(str(level_text)))
+                log_level.append(LogLevel(str(level_text)))
             except ValueError:
                 AppLogger.info(
                     LogType.SYSTEM,
@@ -60,7 +60,7 @@ class LogConfig:
                     skip_database=True,
                 )
 
-        return result
+        return log_level
 
     def get_config_as_dict(self) -> dict[str, list[str]]:
         return {
