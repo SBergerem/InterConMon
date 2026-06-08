@@ -1,13 +1,13 @@
 from database.base_repository import BaseRepository
 from sqlite3 import Cursor
-from models import OutageDetection, OutageChangeState
+from models import Outage, OutageChangeState
 from typing import Any
 from exceptions import DBOperationFailedException
 
 
 class OutageRepository(BaseRepository):
 
-    def _save_internal(self, cursor: Cursor, outage_detections: list[OutageDetection]) -> None:
+    def _save_internal(self, cursor: Cursor, outages: list[Outage]) -> None:
         sql: str = ""
         params: tuple[str, str, str, str, str | None, str | None, float | None, int | None, int | None] = (
             "",
@@ -22,24 +22,24 @@ class OutageRepository(BaseRepository):
         )
         try:
             sql = """
-                    INSERT INTO outages (connection_state, last_connection_test, change_state, test_target_type, start_time, end_time, 
-                    duration_sec, started_group_id, ended_group_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO outages (reachibility_state, last_connection_test, change_state, test_target_type, start_time, end_time, 
+                duration_sec, started_group_id, ended_group_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
 
-            for detections in outage_detections:
+            for outage in outages:
                 params = (
-                    detections.connection_state,
-                    detections.last_connection_test,
-                    detections.change_state,
-                    detections.test_target_type,
-                    detections.start_time,
-                    detections.end_time,
-                    detections.duration_sec,
-                    detections.started_group_id,
-                    detections.ended_group_id,
+                    outage.reachibility_state.value,
+                    outage.last_connection_test,
+                    outage.change_state.value,
+                    outage.test_target_type.value,
+                    outage.start_time,
+                    outage.end_time,
+                    outage.duration_sec,
+                    outage.started_group_id,
+                    outage.ended_group_id,
                 )
 
-                if detections.change_state != OutageChangeState.ENDED.value:
+                if outage.change_state != OutageChangeState.ENDED:
                     raise Exception("Can't save OutageDetection. Change_state is not ENDED")
 
                 cursor.execute(sql, params)
@@ -47,7 +47,7 @@ class OutageRepository(BaseRepository):
                 if cursor.lastrowid is None:
                     raise Exception("Could not calculate id.")
 
-                detections.set_outage_id(cursor.lastrowid)
+                outage.set_id(cursor.lastrowid)
 
                 self._log_statement(
                     "OutageRepository",
@@ -58,11 +58,11 @@ class OutageRepository(BaseRepository):
         except Exception as ex:
             raise DBOperationFailedException("OutageRepository", "_save_internal", sql, params, str(ex))
 
-    def _load_internal(self, cursor: Cursor, internal_where_statement: str = "") -> list[OutageDetection]:
+    def _load_internal(self, cursor: Cursor, internal_where_statement: str = "") -> list[Outage]:
         sql: str = ""
         try:
             sql: str = f"""
-                SELECT id, connection_state, last_connection_test, change_state, test_target_type, start_time, end_time,  
+                SELECT id, reachibility_state, last_connection_test, change_state, test_target_type, start_time, end_time,  
                 duration_sec, started_group_id, ended_group_id FROM outages {internal_where_statement}
             """
 
@@ -76,10 +76,10 @@ class OutageRepository(BaseRepository):
                 {"sql": sql, "params": {}, "row_count": len(rows)},
             )
 
-            detection: list[OutageDetection] = []
+            outages: list[Outage] = []
             for (
                 id,
-                connection_state,
+                reachibility_state,
                 last_connection_test,
                 change_state,
                 test_target_type,
@@ -89,10 +89,10 @@ class OutageRepository(BaseRepository):
                 started_group_id,
                 ended_group_id,
             ) in rows:
-                detection.append(
-                    OutageDetection(
+                outages.append(
+                    Outage(
                         id,
-                        connection_state,
+                        reachibility_state,
                         last_connection_test,
                         change_state,
                         test_target_type,
@@ -100,16 +100,18 @@ class OutageRepository(BaseRepository):
                         end_time,
                         duration_sec,
                         started_group_id,
+                        None,
                         ended_group_id,
+                        None,
                     )
                 )
 
-            return detection
+            return outages
         except Exception as ex:
             raise DBOperationFailedException("OutageRepository", "_load_internal", sql, (), str(ex))
 
-    def save(self, outage_detections: list[OutageDetection]) -> None:
-        return self._database_manager.run_in_transaction(lambda cursor: self._save_internal(cursor, outage_detections))
+    def save(self, outages: list[Outage]) -> None:
+        return self._database_manager.run_in_transaction(lambda cursor: self._save_internal(cursor, outages))
 
-    def load(self, internal_where_statement: str = "") -> list[OutageDetection]:
+    def load(self, internal_where_statement: str = "") -> list[Outage]:
         return self._database_manager.run_in_transaction(lambda cursor: self._load_internal(cursor, internal_where_statement))

@@ -130,21 +130,21 @@ class AppSettings:
     def _add_settings(self, settings_name: str, settings_json: str) -> None:
         settings: dict[str, Any] = json.loads(settings_json)
         match settings_name:
-            case "latency_test_settings_targets":
+            case "latency_test_settings.targets":
                 self.get_latency_test_settings().set_targets(settings["targets"])
-            case "latency_test_settings_interval_seconds":
+            case "latency_test_settings.interval_seconds":
                 self.get_latency_test_settings().set_interval_seconds(settings["interval"])
-            case "latency_test_settings_enabled":
+            case "latency_test_settings.enabled":
                 self.get_latency_test_settings().set_enabled(settings["enabled"])
-            case "outage_check_enabled":
+            case "outage_check.enabled":
                 self.get_outage_check_settings().set_enabled(settings["enabled"])
-            case "outage_check_max_failed_group_test_count":
+            case "outage_check.max_failed_group_test_count":
                 self.get_outage_check_settings().set_max_failed_group_test_count(settings["count"])
-            case "gateway_test_enabled":
+            case "gateway_test.enabled":
                 self.get_gateway_test_settings().set_enabled(settings["enabled"])
-            case "gateway_test_targets":
+            case "gateway_test.targets":
                 self.get_gateway_test_settings().set_targets(settings["targets"])
-            case "gateway_test_interval_seconds":
+            case "gateway_test.interval_seconds":
                 self.get_gateway_test_settings().set_interval_seconds(settings["interval"])
             case _:
                 pass
@@ -162,35 +162,35 @@ class AppSettings:
     def get_as_dict(self) -> list[tuple[str, object]]:
         return [
             (
-                "latency_test_settings_enabled",
+                "latency_test_settings.enabled",
                 {"enabled": self.get_latency_test_settings().get_enabled()},
             ),
             (
-                "latency_test_settings_targets",
+                "latency_test_settings.targets",
                 {"targets": self.get_latency_test_settings().get_targets()},
             ),
             (
-                "latency_test_settings_interval_seconds",
+                "latency_test_settings.interval_seconds",
                 {"interval": self.get_latency_test_settings().get_interval_seconds()},
             ),
             (
-                "outage_check_enabled",
+                "outage_check.enabled",
                 {"enabled": self.get_outage_check_settings().get_enabled()},
             ),
             (
-                "outage_check_max_failed_group_test_count",
+                "outage_check.max_failed_group_test_count",
                 {"count": self.get_outage_check_settings().get_max_failed_group_test_count()},
             ),
             (
-                "gateway_test_targets",
+                "gateway_test.targets",
                 {"targets": self.get_gateway_test_settings().get_targets()},
             ),
             (
-                "gateway_test_enabled",
+                "gateway_test.enabled",
                 {"enabled": self.get_gateway_test_settings().get_enabled()},
             ),
             (
-                "gateway_test_interval_seconds",
+                "gateway_test.interval_seconds",
                 {"interval": self.get_gateway_test_settings().get_interval_seconds()},
             ),
         ]

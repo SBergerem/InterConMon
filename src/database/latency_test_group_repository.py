@@ -12,8 +12,8 @@ class LatencyTestGroupRepository(BaseRepository):
         params: tuple[str | None, str, float | None, int, int, str] = ("", "", None, 0, 0, "")
         try:
             sql = """
-                    INSERT INTO latency_test_groups (start_time, end_time, time_needed_sec, any_success, group_success, test_target_type) 
-                    VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO latency_test_groups (start_time, end_time, time_needed_sec, any_success, group_success, test_target_type) 
+                VALUES (?, ?, ?, ?, ?, ?)
             """
 
             for group in latency_test_groups:
@@ -23,7 +23,7 @@ class LatencyTestGroupRepository(BaseRepository):
                     group.time_needed_sec,
                     int(group.any_success),
                     int(group.group_success),
-                    group.test_target_type,
+                    group.test_target_type.value,
                 )
 
                 cursor.execute(sql, params)
@@ -40,7 +40,7 @@ class LatencyTestGroupRepository(BaseRepository):
                     {"sql": sql, "params": params},
                 )
 
-                group.set_group_id(group_id)
+                group.set_id(group_id)
         except Exception as ex:
             raise DBOperationFailedException("LatencyTestGroupRepository", "_save_internal", sql, params, str(ex))
 

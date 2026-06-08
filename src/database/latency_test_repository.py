@@ -9,19 +9,18 @@ class LatencyTestRepository(BaseRepository):
 
     def _save_internal(self, cursor: Cursor, latency_tests: list[LatencyTest]) -> None:
         sql: str = ""
-        params: tuple[int, str, str, str, int, float | None, str | None] = (0, "", "", "", 0, None, None)
+        params: tuple[str, str, str, int, float | None, str | None] = ("", "", "", 0, None, None)
         try:
             sql = """
-                    INSERT INTO latency_tests (group_id, date_time, target, test_target_type, success, latency_ms, error_message)  
-                    VALUES (?, ?, ?, ?, ?, ?, ?)                 
+                    INSERT INTO latency_tests (date_time, target, test_target_type, success, latency_ms, error_message)  
+                    VALUES (?, ?, ?, ?, ?, ?)                 
                 """
 
             for test in latency_tests:
                 params = (
-                    test.group_id,
                     test.date_time,
                     test.target,
-                    test.test_target_type,
+                    test.test_target_type.value,
                     int(test.success),
                     test.latency_ms,
                     test.error_message,
@@ -32,7 +31,7 @@ class LatencyTestRepository(BaseRepository):
                 if cursor.lastrowid is None:
                     raise Exception("Could not calculate latency_test_id")
 
-                test.set_latency_test_id(cursor.lastrowid)
+                test.set_id(cursor.lastrowid)
 
                 self._log_statement(
                     "LatencyTestRepository",
@@ -47,7 +46,7 @@ class LatencyTestRepository(BaseRepository):
         sql: str = ""
         try:
             sql: str = f"""
-                SELECT id, group_id, date_time, target, test_target_type, success, latency_ms, error_message FROM latency_tests {internal_where_statement}
+                SELECT id, date_time, target, test_target_type, success, latency_ms, error_message FROM latency_tests {internal_where_statement}
             """
 
             cursor.execute(sql)
@@ -61,8 +60,8 @@ class LatencyTestRepository(BaseRepository):
             )
 
             test: list[LatencyTest] = []
-            for id, group_id, date_time, target, test_target_type, success, latency_ms, error_message in rows:
-                test.append(LatencyTest(id, group_id, date_time, target, test_target_type, success, latency_ms, error_message))
+            for id, date_time, target, test_target_type, success, latency_ms, error_message in rows:
+                test.append(LatencyTest(id, date_time, target, test_target_type, success, latency_ms, error_message))
 
             return test
         except Exception as ex:

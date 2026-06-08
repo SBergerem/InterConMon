@@ -54,7 +54,7 @@ class DatabaseInitializerRepository(BaseRepository):
             sql = """
                 CREATE TABLE IF NOT EXISTS outages(
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    connection_state TEXT NOT NULL,
+                    reachibility_state TEXT NOT NULL,
                     test_target_type TEXT NOT NULL,
                     last_connection_test TEXT NOT NULL,
                     change_state TEXT NOT NULL,
@@ -66,6 +66,26 @@ class DatabaseInitializerRepository(BaseRepository):
                     
                     FOREIGN KEY (started_group_id) REFERENCES latency_test_groups(id),
                     FOREIGN KEY (ended_group_id) REFERENCES latency_test_groups(id)
+                )
+            """
+            cursor.execute(sql)
+            self._log_statement(
+                "DatabaseInitializerRepository",
+                "_initialize_database_intern",
+                cursor,
+                {"sql": sql, "params": {}},
+            )
+
+            sql = """
+                CREATE TABLE IF NOT EXISTS connection_diagnoses(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    date_time TEXT NOT NULL,
+                    connection_state TEXT NOT NULL, 
+                    latency_test_group_id INTEGER NOT NULL,
+                    outage_id INTEGER NOT NULL,
+                    
+                    FOREIGN KEY (latency_test_group_id) REFERENCES latency_test_groups(id),
+                    FOREIGN KEY (outage_id) REFERENCES outages(id)
                 )
             """
             cursor.execute(sql)

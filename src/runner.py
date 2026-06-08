@@ -9,7 +9,7 @@ from models import (
     LatencyTest,
     LatencyTestGroup,
     LogType,
-    OutageDetection,
+    Outage,
     OutageChangeState,
     TestTargetType,
 )
@@ -97,19 +97,19 @@ class Runner:
                 raise ThreadStoppedException("Runner", "_run_latency_test_and_outage_check", "self._loop_thread")
 
             if outage_check_enabled:
-                detection: OutageDetection = self._run_outage_detection(
+                outage: Outage = self._run_outage_detection(
                     outage_detector, max_failed_group_test_count, test_group, test_target_type
                 )
 
-                if detection.change_state == OutageChangeState.ENDED.value:
-                    self._outage_repository.save([detection])
+                if outage.change_state == OutageChangeState.ENDED:
+                    self._outage_repository.save([outage])
                     AppLogger.info(
                         LogType.OUTAGE,
                         "Outage ended",
                         "Runner",
                         "_run_outage_detection",
-                        related_object_type="OutageDetection",
-                        related_object_id=detection.id,
+                        related_object_type="Outage",
+                        related_object_id=outage.id,
                     )
 
         return time.time() + interval_seconds
@@ -126,17 +126,17 @@ class Runner:
         max_failed_group_test_count: int,
         latency_test_group: LatencyTestGroup,
         test_target_type: TestTargetType,
-    ) -> OutageDetection:
+    ) -> Outage:
         outage_detector.set_max_failed_group_test_count(max_failed_group_test_count)
 
-        detection: OutageDetection = outage_detector.check_group(latency_test_group, test_target_type)
+        outage: Outage = outage_detector.check_group(latency_test_group, test_target_type)
 
-        if detection.change_state == OutageChangeState.STARTED.value:
+        if outage.change_state == OutageChangeState.STARTED:
             AppLogger.info(LogType.OUTAGE, "Outage started", "Runner", "_run_outage_detection")
 
-        AppLogger.debug(LogType.SYSTEM, f"{test_target_type.value} {detection.connection_state}", "Runner", "_run_outage_detection")
+        AppLogger.debug(LogType.SYSTEM, f"{test_target_type} {outage.reachibility_state}", "Runner", "_run_outage_detection")
 
-        return detection
+        return outage
 
     # Checks, if the thread isn't already running. If it's not it's starting the thread
     def run(self) -> None:

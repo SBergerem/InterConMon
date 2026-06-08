@@ -8,16 +8,24 @@ class TestTargetType(Enum):
     GATEWAY = "gateway"
 
 
-class ConnectionState(Enum):
+class ReachabilityState(Enum):
     UNKNOWN = "unknown"
-    ONLINE = "online"
-    OFFLINE = "offline"
+    REACHABLE = "reachable"
+    UNREACHABLE = "unreachable"
 
 
 class OutageChangeState(Enum):
     NONE = "none"
     STARTED = "started"
     ENDED = "ended"
+
+
+class ConnectionState(Enum):
+    UNKNOWN = "unknown"
+    NO_INTERNET_CONNECTION = "no_internet_connection"
+    INTERNET_CONNECTION = "internet_connection"
+    NO_GATEWAY_CONNECTION = "no_gateway_connection"
+    INTERNAL_NETWORK_ERROR = "internal_network_error"
 
 
 class LogType(Enum):
@@ -45,57 +53,66 @@ class LogLevel(Enum):
 
 
 @dataclass
-class LatencyTest:
+class BaseModel:
     id: int
-    group_id: int
-    date_time: str
-    target: str
-    test_target_type: str
-    success: bool
-    latency_ms: float | None
-    error_message: str | None
 
-    def set_latency_test_id(self, latency_test_id: int) -> None:
-        self.id = latency_test_id
+    def set_id(self, id: int) -> None:
+        self.id = id
 
 
 @dataclass
-class LatencyTestGroup:
-    id: int
+class LatencyTest(BaseModel):
+    date_time: str
+    target: str
+    test_target_type: TestTargetType
+    success: bool
+    latency_ms: float | None
+    error_message: str | None
+    group_id: int
+
+
+@dataclass
+class LatencyTestGroup(BaseModel):
     start_time: str
     end_time: str
     time_needed_sec: float
     any_success: bool
     group_success: bool
-    test_target_type: str
+    test_target_type: TestTargetType
     tests: list[LatencyTest] = field(default_factory=lambda: list[LatencyTest]())
 
-    def set_group_id(self, group_id: int) -> None:
-        self.id = group_id
-        for tests in self.tests:
-            tests.group_id = group_id
+    def set_id(self, id: int) -> None:
+        for test in self.tests:
+            test.group_id = id
 
 
 @dataclass
-class OutageDetection:
-    id: int
-    connection_state: str
+class Outage(BaseModel):
+    reachibility_state: ReachabilityState
     last_connection_test: str
-    change_state: str
-    test_target_type: str
+    change_state: OutageChangeState
+    test_target_type: TestTargetType
     start_time: str | None
     end_time: str | None
     duration_sec: float | None
     started_group_id: int | None
+    started_group: LatencyTestGroup | None
     ended_group_id: int | None
-
-    def set_outage_id(self, outage_id: int) -> None:
-        self.id = outage_id
+    ended_group: LatencyTestGroup | None
 
 
 @dataclass
-class LogEntry:
-    id: int
+class ConnectionDiagnosis(BaseModel):
+    date_time: str
+    connection_state: ConnectionState
+    latency_test_group_id: int
+    latency_test_group: LatencyTestGroup | None
+    outage_id: int
+    outage: Outage | None
+
+
+@dataclass
+class LogEntry(BaseModel):
     date_time: str
     log_level: str
     log_type: str

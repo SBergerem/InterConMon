@@ -1,5 +1,5 @@
 from datetime import datetime
-from models import OutageDetection, ConnectionState, OutageChangeState, LatencyTestGroup, LogType, TestTargetType
+from models import Outage, ConnectionState, OutageChangeState, LatencyTestGroup, LogType, TestTargetType
 from app_logger import AppLogger
 
 
@@ -12,7 +12,7 @@ class OutageDetector:
         self._started_test_group_id: int | None = None
         self._max_failed_group_test_count: int = 3
 
-    def check_group(self, group: LatencyTestGroup, test_target_type: TestTargetType) -> OutageDetection:
+    def check_group(self, group: LatencyTestGroup, test_target_type: TestTargetType) -> Outage:
         AppLogger.extended_debug(
             LogType.OUTAGE,
             "Started outage check",
@@ -73,17 +73,19 @@ class OutageDetector:
             related_object_id=group.id,
         )
 
-        return OutageDetection(
+        return Outage(
             0,
-            self._current_connection_state.value,
+            self._current_connection_state,
             connection_test_date_time,
-            change_state.value,
-            test_target_type.value,
+            change_state,
+            test_target_type,
             start_time,
             end_time,
             duration_sec,
             started_group_id,
+            None,
             ended_group_id,
+            None
         )
 
     def set_max_failed_group_test_count(self, max_failed_group_test_count: int) -> None:
