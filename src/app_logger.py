@@ -143,6 +143,8 @@ class AppLogger:
             details_json: str | None = None
             if details is not None:
                 details_json = json.dumps(details, ensure_ascii=False)
+                details_json = " ".join(details_json.split())
+                details_json = details_json.replace("\\n", "")
             try:
                 cls._log_entry_repository.save(
                     [
