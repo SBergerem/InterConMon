@@ -85,6 +85,8 @@ The runner currently uses separate `OutageDetector` instances for server checks 
 
 `AppSettings` stores runtime settings in memory.
 
+The current design intentionally keeps one shared `AppSettings` object in memory. The runner reads from this object during its monitoring loop, and the future web server can update the same object. Individual settings groups use locks so that both components can access the current values safely while the runner is active.
+
 Current settings groups:
 
 * `LatencyTestSettings`

@@ -146,7 +146,8 @@ Completed:
 
 Still planned:
 
-* Allow runtime settings to be changed while the runner is active
+* Connect the future web interface to the existing shared `AppSettings` object
+* Persist changed settings after updates from the web interface
 * Make the future web server interact safely with the runner
 * Improve status reporting from the runner to the future web interface
 
