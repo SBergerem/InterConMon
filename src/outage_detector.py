@@ -6,7 +6,7 @@ from app_logger import AppLogger
 class OutageDetector:
 
     def __init__(self) -> None:
-        self._current_reachibility_state: ReachabilityState = ReachabilityState.UNKNOWN
+        self._current_reachability_state: ReachabilityState = ReachabilityState.UNKNOWN
         self._first_failed_test_time: str | None = None
         self._failed_groups_test_count = 0
         self._started_test_group_id: int | None = None
@@ -23,7 +23,7 @@ class OutageDetector:
         )
 
         test_succeeded: bool = group.any_success
-        last_reachibility_state: ReachabilityState = self._current_reachibility_state
+        last_reachability_state: ReachabilityState = self._current_reachability_state
         connection_test_date_time: str = group.end_time
         change_state: OutageChangeState = OutageChangeState.NONE
         start_time: str | None = None
@@ -33,7 +33,7 @@ class OutageDetector:
         ended_group_id: int | None = None
 
         if test_succeeded:
-            if last_reachibility_state == ReachabilityState.UNREACHABLE:
+            if last_reachability_state == ReachabilityState.UNREACHABLE:
                 change_state = OutageChangeState.ENDED
                 start_time = self._first_failed_test_time
                 end_time = connection_test_date_time
@@ -43,7 +43,7 @@ class OutageDetector:
                 ended_group_id = group.id
                 started_group_id = self._started_test_group_id
 
-            self._current_reachibility_state = ReachabilityState.REACHABLE
+            self._current_reachability_state = ReachabilityState.REACHABLE
             self._first_failed_test_time = None
             self._failed_groups_test_count = 0
             self._started_test_group_id = None
@@ -60,8 +60,8 @@ class OutageDetector:
             if self._failed_groups_test_count >= self._max_failed_group_test_count:
                 start_time = self._first_failed_test_time
 
-                if last_reachibility_state != ReachabilityState.UNREACHABLE:
-                    self._current_reachibility_state = ReachabilityState.UNREACHABLE
+                if last_reachability_state != ReachabilityState.UNREACHABLE:
+                    self._current_reachability_state = ReachabilityState.UNREACHABLE
                     change_state = OutageChangeState.STARTED
 
         AppLogger.extended_debug(
@@ -75,7 +75,7 @@ class OutageDetector:
 
         return Outage(
             0,
-            self._current_reachibility_state,
+            self._current_reachability_state,
             connection_test_date_time,
             change_state,
             test_target_type,

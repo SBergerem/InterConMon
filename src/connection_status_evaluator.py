@@ -1,22 +1,33 @@
-from models import LatencyTestGroup, Outage, ConnectionDiagnosis, NetworkDiagnosisType, ReachabilityState
+from models import LatencyTestGroup, ConnectionDiagnosis, NetworkDiagnosisType
 from datetime import datetime
 
 
-class ConnectionStatusEvaluator:
+class ConnectionDiagnosisEvaluator:
 
     @classmethod
-    def create_diagnosis(cls, latency_test_group: LatencyTestGroup, outage: Outage) -> ConnectionDiagnosis:
+    def create_diagnosis(
+        cls, gateway_latency_test_group: LatencyTestGroup, server_latency_test_group: LatencyTestGroup
+    ) -> ConnectionDiagnosis:
         network_diagnosis_type: NetworkDiagnosisType = NetworkDiagnosisType.UNKNOWN
 
-        if latency_test_group.any_success and (outage.reachibility_state == ReachabilityState.REACHABLE):
-            network_diagnosis_type = NetworkDiagnosisType.INTERNET_CONNECTION
-        elif latency_test_group.any_success and (outage.reachibility_state != ReachabilityState.REACHABLE):
-            network_diagnosis_type = NetworkDiagnosisType.NO_INTERNET_CONNECTION
-        elif not latency_test_group.any_success and (outage.reachibility_state != ReachabilityState.REACHABLE):
+        is_gateway_connected: bool = gateway_latency_test_group.any_success
+        is_server_connected: bool = server_latency_test_group.any_success
+
+        if is_gateway_connected and is_server_connected:
+            network_diagnosis_type = NetworkDiagnosisType.EXTERNAL_CONNECTION
+        elif is_gateway_connected and not is_server_connected:
+            network_diagnosis_type = NetworkDiagnosisType.NO_EXTERNAL_CONNECTION
+        elif not is_gateway_connected and not is_server_connected:
             network_diagnosis_type = NetworkDiagnosisType.NO_GATEWAY_CONNECTION
         else:
             network_diagnosis_type = NetworkDiagnosisType.INTERNAL_NETWORK_ERROR
 
         return ConnectionDiagnosis(
-            0, datetime.now().isoformat(), network_diagnosis_type, latency_test_group.id, latency_test_group, outage.id, outage
+            0,
+            datetime.now().isoformat(),
+            network_diagnosis_type,
+            gateway_latency_test_group.id,
+            gateway_latency_test_group,
+            server_latency_test_group.id,
+            server_latency_test_group,
         )

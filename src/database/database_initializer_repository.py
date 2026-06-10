@@ -54,7 +54,7 @@ class DatabaseInitializerRepository(BaseRepository):
             sql = """
                 CREATE TABLE IF NOT EXISTS outages(
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    reachibility_state TEXT NOT NULL,
+                    reachability_state TEXT NOT NULL,
                     test_target_type TEXT NOT NULL,
                     last_connection_test TEXT NOT NULL,
                     change_state TEXT NOT NULL,
@@ -80,12 +80,12 @@ class DatabaseInitializerRepository(BaseRepository):
                 CREATE TABLE IF NOT EXISTS connection_diagnoses(
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     date_time TEXT NOT NULL,
-                    network_diagnosis_type TEXT NOT NULL, 
-                    latency_test_group_id INTEGER NOT NULL,
-                    outage_id INTEGER NOT NULL,
+                    network_diagnosis_type TEXT NOT NULL,
+                    gateway_latency_test_group_id INTEGER NOT NULL, 
+                    server_latency_test_group_id INTEGER NOT NULL,
                     
-                    FOREIGN KEY (latency_test_group_id) REFERENCES latency_test_groups(id),
-                    FOREIGN KEY (outage_id) REFERENCES outages(id)
+                    FOREIGN KEY (gateway_latency_test_group_id) REFERENCES latency_test_groups(id),
+                    FOREIGN KEY (server_latency_test_group_id) REFERENCES latency_test_groups(id)
                 )
             """
             cursor.execute(sql)

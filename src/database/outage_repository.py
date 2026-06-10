@@ -22,13 +22,13 @@ class OutageRepository(BaseRepository):
         )
         try:
             sql = """
-                INSERT INTO outages (reachibility_state, last_connection_test, change_state, test_target_type, start_time, end_time, 
+                INSERT INTO outages (reachability_state, last_connection_test, change_state, test_target_type, start_time, end_time, 
                 duration_sec, started_group_id, ended_group_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
 
             for outage in outages:
                 params = (
-                    outage.reachibility_state.value,
+                    outage.reachability_state.value,
                     outage.last_connection_test,
                     outage.change_state.value,
                     outage.test_target_type.value,
@@ -62,7 +62,7 @@ class OutageRepository(BaseRepository):
         sql: str = ""
         try:
             sql: str = f"""
-                SELECT id, reachibility_state, last_connection_test, change_state, test_target_type, start_time, end_time,  
+                SELECT id, reachability_state, last_connection_test, change_state, test_target_type, start_time, end_time,  
                 duration_sec, started_group_id, ended_group_id FROM outages {internal_where_statement}
             """
 
@@ -79,7 +79,7 @@ class OutageRepository(BaseRepository):
             outages: list[Outage] = []
             for (
                 id,
-                reachibility_state,
+                reachability_state,
                 last_connection_test,
                 change_state,
                 test_target_type,
@@ -92,7 +92,7 @@ class OutageRepository(BaseRepository):
                 outages.append(
                     Outage(
                         id,
-                        reachibility_state,
+                        reachability_state,
                         last_connection_test,
                         change_state,
                         test_target_type,

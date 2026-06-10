@@ -13,7 +13,7 @@ class LatencyTestRepository(BaseRepository):
         try:
             sql = """
                     INSERT INTO latency_tests (group_id, date_time, target, test_target_type, success, latency_ms, error_message)  
-                    VALUES (?, ?, ?, ?, ?, ?)                 
+                    VALUES (?, ?, ?, ?, ?, ?, ?)                 
                 """
 
             for test in latency_tests:

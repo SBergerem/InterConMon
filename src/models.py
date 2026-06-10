@@ -22,8 +22,8 @@ class OutageChangeState(Enum):
 
 class NetworkDiagnosisType(Enum):
     UNKNOWN = "unknown"
-    NO_INTERNET_CONNECTION = "no_internet_connection"
-    INTERNET_CONNECTION = "internet_connection"
+    NO_EXTERNAL_CONNECTION = "no_external_connection"
+    EXTERNAL_CONNECTION = "external_connection"
     NO_GATEWAY_CONNECTION = "no_gateway_connection"
     INTERNAL_NETWORK_ERROR = "internal_network_error"
 
@@ -84,11 +84,13 @@ class LatencyTestGroup(BaseModel):
     def set_id(self, id: int) -> None:
         for test in self.tests:
             test.group_id = id
+            
+        super().set_id(id)
 
 
 @dataclass
 class Outage(BaseModel):
-    reachibility_state: ReachabilityState
+    reachability_state: ReachabilityState
     last_connection_test: str
     change_state: OutageChangeState
     test_target_type: TestTargetType
@@ -105,10 +107,10 @@ class Outage(BaseModel):
 class ConnectionDiagnosis(BaseModel):
     date_time: str
     network_diagnosis_type: NetworkDiagnosisType
-    latency_test_group_id: int
-    latency_test_group: LatencyTestGroup | None
-    outage_id: int
-    outage: Outage | None
+    server_latency_test_group_id: int
+    server_latency_test_group: LatencyTestGroup | None
+    gateway_latency_test_group_id: int
+    gateway_latency_test_group: LatencyTestGroup | None
 
 
 @dataclass

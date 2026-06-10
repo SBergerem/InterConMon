@@ -134,7 +134,7 @@ class Runner:
         if outage.change_state == OutageChangeState.STARTED:
             AppLogger.info(LogType.OUTAGE, "Outage started", "Runner", "_run_outage_detection")
 
-        AppLogger.debug(LogType.SYSTEM, f"{test_target_type} {outage.reachibility_state}", "Runner", "_run_outage_detection")
+        AppLogger.debug(LogType.SYSTEM, f"{test_target_type} {outage.reachability_state}", "Runner", "_run_outage_detection")
 
         return outage
 
