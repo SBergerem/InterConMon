@@ -1,5 +1,6 @@
-from models import LatencyTestGroup, ConnectionDiagnosis, NetworkDiagnosisType
+from models import LatencyTestGroup, ConnectionDiagnosis, NetworkDiagnosisType, LogType
 from datetime import datetime
+from app_logger import AppLogger
 
 
 class ConnectionDiagnosisEvaluator:
@@ -21,6 +22,14 @@ class ConnectionDiagnosisEvaluator:
             network_diagnosis_type = NetworkDiagnosisType.NO_GATEWAY_CONNECTION
         else:
             network_diagnosis_type = NetworkDiagnosisType.INTERNAL_NETWORK_ERROR
+
+        AppLogger.detailed_debug(
+            LogType.SCAN,
+            "Diagnosis created",
+            "ConnectionDiagnosisEvaluator",
+            "create_diagnosis",
+            details={"network_diagnosis_type": network_diagnosis_type.value},
+        )
 
         return ConnectionDiagnosis(
             0,

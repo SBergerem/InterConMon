@@ -107,10 +107,11 @@ class Outage(BaseModel):
 class ConnectionDiagnosis(BaseModel):
     date_time: str
     network_diagnosis_type: NetworkDiagnosisType
-    server_latency_test_group_id: int
-    server_latency_test_group: LatencyTestGroup | None
     gateway_latency_test_group_id: int
     gateway_latency_test_group: LatencyTestGroup | None
+    server_latency_test_group_id: int
+    server_latency_test_group: LatencyTestGroup | None
+
 
 
 @dataclass

@@ -32,13 +32,13 @@ class ConnectionDiagnosisRepository(BaseRepository):
                 diagnosis.set_id(cursor.lastrowid)
 
                 self._log_statement(
-                    "CpnnectionStatusDiagnosisRepository",
+                    "ConnectionStatusDiagnosisRepository",
                     "_save_internal",
                     cursor,
                     {"sql": sql, "params": params},
                 )
         except Exception as ex:
-            raise DBOperationFailedException("CpnnectionStatusDiagnosisRepository", "_save_internal", sql, params, str(ex))
+            raise DBOperationFailedException("ConnectionStatusDiagnosisRepository", "_save_internal", sql, params, str(ex))
 
     def _load_internal(self, cursor: Cursor, internal_where_statement: str = "") -> list[ConnectionDiagnosis]:
         sql: str = ""
@@ -51,7 +51,7 @@ class ConnectionDiagnosisRepository(BaseRepository):
             rows: list[Any] = cursor.fetchall()
 
             self._log_statement(
-                "CpnnectionStatusDiagnosisRepository",
+                "ConnectionStatusDiagnosisRepository",
                 "_load_internal",
                 cursor,
                 {"sql": sql, "params": {}, "row_count": len(rows)},
@@ -67,7 +67,7 @@ class ConnectionDiagnosisRepository(BaseRepository):
 
             return diagnoses
         except Exception as ex:
-            raise DBOperationFailedException("CpnnectionStatusDiagnosisRepository", "_load_internal", sql, (), str(ex))
+            raise DBOperationFailedException("ConnectionStatusDiagnosisRepository", "_load_internal", sql, (), str(ex))
 
     def save(self, diagnoses: list[ConnectionDiagnosis]) -> None:
         self._database_manager.run_in_transaction(lambda cursor: self._save_internal(cursor, diagnoses))

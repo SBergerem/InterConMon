@@ -39,6 +39,7 @@ class Runner:
 
             next_server_test: float = 0.0
             next_gateway_test: float = 0.0
+            next_nothing_to_do: float = 0.0
 
             server_test_group: LatencyTestGroup | None = None
             gateway_test_group: LatencyTestGroup | None = None
@@ -72,6 +73,15 @@ class Runner:
                     gateway_test_group = None
                     server_test_group = None
 
+                if (
+                    next_nothing_to_do < time.time()
+                    and not gateway_test_settings.get_enabled()
+                    and not server_test_settings.get_enabled()
+                    and not outage_check_settings.get_enabled()
+                ):
+                    AppLogger.warning(LogType.SYSTEM, "Nothing to do. Everything is disabled..", "Runner", "_loop")
+                    next_nothing_to_do = time.time() + 2
+
                 self._stop_event.wait(0.1)
 
             raise ThreadStoppedException("Runner", "_loop", "self._loop_thread")  # Because it can only end, when the stop was requested.
@@ -95,8 +105,8 @@ class Runner:
         test_target_type: TestTargetType,
     ) -> tuple[float, LatencyTestGroup | None]:
         if not latency_test_enabled:
-           return (0, None)
-       
+            return (time.time() + interval_seconds, None)
+
         test_group: LatencyTestGroup = NetworkChecker.run_test_group(targets, test_target_type)
         self._database_manager.run_in_transaction(lambda cursor: self._save_latency_tests(cursor, test_group.tests, test_group))
 
