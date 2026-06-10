@@ -40,7 +40,7 @@ class OutageRepository(BaseRepository):
                 )
 
                 if outage.change_state != OutageChangeState.ENDED:
-                    raise Exception("Can't save OutageDetection. Change_state is not ENDED")
+                    raise Exception("Can't save Outage. Change_state is not ENDED")
 
                 cursor.execute(sql, params)
 
