@@ -1,4 +1,4 @@
-from models import LatencyTestGroup, Outage, ConnectionDiagnosis, ConnectionState, ReachabilityState
+from models import LatencyTestGroup, Outage, ConnectionDiagnosis, NetworkDiagnosisType, ReachabilityState
 from datetime import datetime
 
 
@@ -6,17 +6,17 @@ class ConnectionStatusEvaluator:
 
     @classmethod
     def create_diagnosis(cls, latency_test_group: LatencyTestGroup, outage: Outage) -> ConnectionDiagnosis:
-        connection_state: ConnectionState = ConnectionState.UNKNOWN
+        network_diagnosis_type: NetworkDiagnosisType = NetworkDiagnosisType.UNKNOWN
 
         if latency_test_group.any_success and (outage.reachibility_state == ReachabilityState.REACHABLE):
-            connection_state = ConnectionState.INTERNET_CONNECTION
+            network_diagnosis_type = NetworkDiagnosisType.INTERNET_CONNECTION
         elif latency_test_group.any_success and (outage.reachibility_state != ReachabilityState.REACHABLE):
-            connection_state = ConnectionState.NO_INTERNET_CONNECTION
+            network_diagnosis_type = NetworkDiagnosisType.NO_INTERNET_CONNECTION
         elif not latency_test_group.any_success and (outage.reachibility_state != ReachabilityState.REACHABLE):
-            connection_state = ConnectionState.NO_GATEWAY_CONNECTION
+            network_diagnosis_type = NetworkDiagnosisType.NO_GATEWAY_CONNECTION
         else:
-            connection_state = ConnectionState.INTERNAL_NETWORK_ERROR
+            network_diagnosis_type = NetworkDiagnosisType.INTERNAL_NETWORK_ERROR
 
         return ConnectionDiagnosis(
-            0, datetime.now().isoformat(), connection_state, latency_test_group.id, latency_test_group, outage.id, outage
+            0, datetime.now().isoformat(), network_diagnosis_type, latency_test_group.id, latency_test_group, outage.id, outage
         )

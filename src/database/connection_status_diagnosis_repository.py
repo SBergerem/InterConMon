@@ -12,12 +12,12 @@ class CpnnectionDiagnosisRepository(BaseRepository):
         params: tuple[str, str, int, int] = ("", "", 0, 0)
         try:
             sql = """
-                    INSERT INTO connection_diagnoses (date_time, connection_state, latency_test_group_id, outage_id)  
+                    INSERT INTO connection_diagnoses (date_time, network_diagnsis_type, latency_test_group_id, outage_id)  
                     VALUES (?, ?, ?, ?)                 
                 """
 
             for diagnosis in diagnoses:
-                params = (diagnosis.date_time, diagnosis.connection_state.value, diagnosis.latency_test_group_id, diagnosis.outage_id)
+                params = (diagnosis.date_time, diagnosis.network_diagnosis_type.value, diagnosis.latency_test_group_id, diagnosis.outage_id)
 
                 cursor.execute(sql, params)
 
@@ -39,7 +39,7 @@ class CpnnectionDiagnosisRepository(BaseRepository):
         sql: str = ""
         try:
             sql: str = f"""
-                SELECT date_time, connection_state, latency_test_group_id, outage_id FROM connection_diagnoses {internal_where_statement}
+                SELECT date_time, network_diagnosis_type, latency_test_group_id, outage_id FROM connection_diagnoses {internal_where_statement}
             """
 
             cursor.execute(sql)
@@ -53,8 +53,8 @@ class CpnnectionDiagnosisRepository(BaseRepository):
             )
 
             diagnoses: list[ConnectionDiagnosis] = []
-            for id, date_time, connection_state, latency_test_group_id, outage_id in rows:
-                diagnoses.append(ConnectionDiagnosis(id, date_time, connection_state, latency_test_group_id, None, outage_id, None))
+            for id, date_time, network_diagnosis_type, latency_test_group_id, outage_id in rows:
+                diagnoses.append(ConnectionDiagnosis(id, date_time, network_diagnosis_type, latency_test_group_id, None, outage_id, None))
 
             return diagnoses
         except Exception as ex:

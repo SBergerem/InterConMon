@@ -20,7 +20,7 @@ class OutageChangeState(Enum):
     ENDED = "ended"
 
 
-class ConnectionState(Enum):
+class NetworkDiagnosisType(Enum):
     UNKNOWN = "unknown"
     NO_INTERNET_CONNECTION = "no_internet_connection"
     INTERNET_CONNECTION = "internet_connection"
@@ -62,13 +62,13 @@ class BaseModel:
 
 @dataclass
 class LatencyTest(BaseModel):
+    group_id: int
     date_time: str
     target: str
     test_target_type: TestTargetType
     success: bool
     latency_ms: float | None
     error_message: str | None
-    group_id: int
 
 
 @dataclass
@@ -104,7 +104,7 @@ class Outage(BaseModel):
 @dataclass
 class ConnectionDiagnosis(BaseModel):
     date_time: str
-    connection_state: ConnectionState
+    network_diagnosis_type: NetworkDiagnosisType
     latency_test_group_id: int
     latency_test_group: LatencyTestGroup | None
     outage_id: int

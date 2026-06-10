@@ -80,7 +80,7 @@ class DatabaseInitializerRepository(BaseRepository):
                 CREATE TABLE IF NOT EXISTS connection_diagnoses(
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     date_time TEXT NOT NULL,
-                    connection_state TEXT NOT NULL, 
+                    network_diagnosis_type TEXT NOT NULL, 
                     latency_test_group_id INTEGER NOT NULL,
                     outage_id INTEGER NOT NULL,
                     

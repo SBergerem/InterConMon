@@ -133,7 +133,7 @@ class NetworkChecker:
                 details={"target": target},
             )
 
-        return LatencyTest(0, date_time, target, test_target_type, success, latency_ms, error_message)
+        return LatencyTest(0, 0, date_time, target, test_target_type, success, latency_ms, error_message)
 
     @classmethod
     def run_test_group(cls, targets: list[str], test_target_type: TestTargetType) -> LatencyTestGroup:
