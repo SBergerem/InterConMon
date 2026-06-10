@@ -52,6 +52,15 @@ class LogLevel(Enum):
     DETAILED_DEBUG = "detailed_debug"
 
 
+class SpeedTestTool(Enum):
+    UNKNOWN = "unknown"
+    LIBRESPEED_CLI = "librespeed_cli"
+    OOKLA_CLI = "ookla_cli"
+    PYTHON_SPEEDTEST_CLI = "python_speedtest_cli"
+    CLOUDFLARE_CLI = "cloudflare_cli"
+    FAST_CLI = "fast_cli"
+
+
 @dataclass
 class BaseModel:
     id: int
@@ -84,7 +93,7 @@ class LatencyTestGroup(BaseModel):
     def set_id(self, id: int) -> None:
         for test in self.tests:
             test.group_id = id
-            
+
         super().set_id(id)
 
 
@@ -112,6 +121,23 @@ class ConnectionDiagnosis(BaseModel):
     server_latency_test_group_id: int
     server_latency_test_group: LatencyTestGroup | None
 
+
+@dataclass
+class SpeedTestResult(BaseModel):
+    date_time: str
+    success: bool
+    download_mbps: float | None
+    upload_mbps: float | None
+    ping_ms: float | None
+    jitter_ms: float | None
+    server_name: str | None
+    server_location: str | None
+    server_id: int | None
+    isp: str | None
+    external_ip: str | None
+    error_message: str | None
+    duration_sec: int | None
+    tool_name: str
 
 
 @dataclass

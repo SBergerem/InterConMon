@@ -2,6 +2,7 @@ from threading import Lock
 import json
 from typing import Any
 from exceptions import ValueInvalidException
+from models import SpeedTestTool
 
 
 class LatencyTestSettings:
@@ -116,16 +117,104 @@ class GatewayTestSettings:
             self._interval_seconds = interval
 
 
+class SpeedTestSettings:
+
+    def __init__(self) -> None:
+        self._lock_enabled: Lock = Lock()
+        self._lock_interval_minutes: Lock = Lock()
+        self._lock_run_upload: Lock = Lock()
+        self._lock_run_download: Lock = Lock()
+        self._lock_tool: Lock = Lock()
+        self._lock_max_duration_sec: Lock = Lock()
+        self._lock_server_id: Lock = Lock()
+        self._lock_only_when_connection_ok: Lock = Lock()
+
+        self._enabled: bool = False
+        self._interval_minutes: int = 60
+        self._run_upload: bool = True
+        self._run_download: bool = True
+        self._tool: str = SpeedTestTool.UNKNOWN.value
+        self._max_duration_sec: int = 120
+        self._server_id: str | None = None
+        self._only_when_connection_ok: bool = True
+
+    def get_enabled(self) -> bool:
+        with self._lock_enabled:
+            return self._enabled
+
+    def get_interval_minutes(self) -> int:
+        with self._lock_interval_minutes:
+            return self._interval_minutes
+
+    def get_run_update(self) -> bool:
+        with self._lock_run_upload:
+            return self._run_upload
+
+    def get_run_download(self) -> bool:
+        with self._lock_run_download:
+            return self._run_download
+
+    def get_tool(self) -> str:
+        with self._lock_tool:
+            return self._tool
+
+    def get_max_duration_sec(self) -> int:
+        with self._lock_max_duration_sec:
+            return self._max_duration_sec
+
+    def get_server_id(self) -> str | None:
+        with self._lock_server_id:
+            return self._server_id
+
+    def get_only_get_connection_ok(self) -> bool:
+        with self._lock_only_when_connection_ok:
+            return self._only_when_connection_ok
+
+    def set_enabled(self, enabled: bool) -> None:
+        with self._lock_enabled:
+            self._enabled = enabled
+
+    def set_interval_minutes(self, interval_minutes: int) -> None:
+        with self._lock_interval_minutes:
+            self._interval_minutes = interval_minutes
+
+    def set_run_update(self, run_update: bool) -> None:
+        with self._lock_run_upload:
+            self._run_upload = run_update
+
+    def set_run_download(self, run_download: bool) -> None:
+        with self._lock_run_download:
+            self._run_download = run_download
+
+    def set_tool(self, tool: str) -> None:
+        with self._lock_tool:
+            self._tool = tool
+
+    def set_max_duration_sec(self, max_duration_sec: int) -> None:
+        with self._lock_max_duration_sec:
+            self._max_duration_sec = max_duration_sec
+
+    def set_server_id(self, server_id: str | None) -> None:
+        with self._lock_server_id:
+            self._server_id = server_id
+
+    def set_only_get_connection_ok(self, only_when_connection_ok: bool) -> None:
+        with self._lock_only_when_connection_ok:
+            self._only_when_connection_ok = only_when_connection_ok
+
+
 class AppSettings:
 
     def __init__(self) -> None:
         self._lock_latency_test_settings: Lock = Lock()
         self._lock_gateway_test_settings: Lock = Lock()
         self._lock_outage_check_settings: Lock = Lock()
+        self._lock_speed_test_settings: Lock = Lock()
 
         self._latency_test_settings: LatencyTestSettings = LatencyTestSettings()
         self._gateway_test_settings: GatewayTestSettings = GatewayTestSettings()
         self._outage_check_settings: OutageCheckSettings = OutageCheckSettings()
+        self._speed_test_settings: SpeedTestSettings = SpeedTestSettings()
 
     def _add_settings(self, settings_name: str, settings_json: str) -> None:
         settings: dict[str, Any] = json.loads(settings_json)
@@ -146,6 +235,22 @@ class AppSettings:
                 self.get_gateway_test_settings().set_targets(settings["targets"])
             case "gateway_test.interval_seconds":
                 self.get_gateway_test_settings().set_interval_seconds(settings["interval"])
+            case "speed_test.enabled":
+                self.get_speed_test_settings().set_enabled(settings["enabled"])
+            case "speed_test.interval_minutes":
+                self.get_speed_test_settings().set_interval_minutes(settings["minutes"])
+            case "speed_test.run_upload":
+                self.get_speed_test_settings().set_run_update(settings["enabled"])
+            case "speed_test.run_download":
+                self.get_speed_test_settings().set_run_download(settings["enabled"])
+            case "speed_test.tool":
+                self.get_speed_test_settings().set_tool(settings["name"])
+            case "speed_test.max_duration_sec":
+                self.get_speed_test_settings().set_max_duration_sec(settings["seconds"])
+            case "speed_test.server_id":
+                self.get_speed_test_settings().set_server_id(settings["id"])
+            case "speed_test.only_when_connection_ok":
+                self.get_speed_test_settings().set_only_get_connection_ok(settings["enabled"])
             case _:
                 pass
 
@@ -193,6 +298,38 @@ class AppSettings:
                 "gateway_test.interval_seconds",
                 {"interval": self.get_gateway_test_settings().get_interval_seconds()},
             ),
+            (
+                "speed_test.enabled",
+                {"interval": self.get_speed_test_settings().get_enabled()},
+            ),
+            (
+                "speed_test.interval_minutes",
+                {"interval": self.get_speed_test_settings().get_interval_minutes()},
+            ),
+            (
+                "speed_test.run_upload",
+                {"interval": self.get_speed_test_settings().get_run_update()},
+            ),
+            (
+                "speed_test.run_download",
+                {"interval": self.get_speed_test_settings().get_run_download()},
+            ),
+            (
+                "speed_test.tool",
+                {"interval": self.get_speed_test_settings().get_tool()},
+            ),
+            (
+                "speed_test.max_duration_sec",
+                {"interval": self.get_speed_test_settings().get_max_duration_sec()},
+            ),
+            (
+                "speed_test.server_id",
+                {"interval": self.get_speed_test_settings().get_server_id()},
+            ),
+            (
+                "speed_test.only_when_connection_ok",
+                {"interval": self.get_speed_test_settings().get_only_get_connection_ok()},
+            ),
         ]
 
     def get_latency_test_settings(self) -> LatencyTestSettings:
@@ -206,3 +343,7 @@ class AppSettings:
     def get_outage_check_settings(self) -> OutageCheckSettings:
         with self._lock_outage_check_settings:
             return self._outage_check_settings
+
+    def get_speed_test_settings(self) -> SpeedTestSettings:
+        with self._lock_speed_test_settings:
+            return self._speed_test_settings
