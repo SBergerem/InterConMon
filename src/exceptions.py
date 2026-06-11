@@ -55,7 +55,8 @@ class ObjectIsNoneException(CustomException):
             f"Object {object_name} of type {object_type} is None",
             exception_name="ObjectIsNoneException",
         )
-        
+
+
 class ListIsEmptyException(CustomException):
     def __init__(self, class_name: str, function_name: str, object_name: str, object_type: str) -> None:
         super().__init__(
@@ -95,6 +96,7 @@ class ThreadStoppedException(CustomException):
             exception_name="ThreadStoppedException",
         )
 
+
 class ValueInvalidException(CustomException):
     def __init__(self, class_name: str, function_name: str, value: Any, message: str) -> None:
         super().__init__(
@@ -102,4 +104,14 @@ class ValueInvalidException(CustomException):
             function_name,
             f"Can't set value {value}. \n    Reason: {message} ",
             exception_name="ValueInvalidException",
+        )
+
+
+class MethodNotImplementedException(CustomException):
+    def __init__(self, class_name: str, function_name: str) -> None:
+        super().__init__(
+            class_name,
+            function_name,
+            f"Function {function_name} in class {class_name} is not implemented!",
+            exception_name="MethodNotImplementedException",
         )

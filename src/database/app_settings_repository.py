@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 from typing import Any
 from app_settings import AppSettings
-from exceptions import DBOperationFailedException
+from exceptions import DBOperationFailedException, CustomException
 
 
 class AppSettingsRepository(BaseRepository):
@@ -51,6 +51,8 @@ class AppSettingsRepository(BaseRepository):
                         cursor,
                         {"sql": sql, "params": params},
                     )
+        except CustomException as ex:
+            raise
         except Exception as ex:
             raise DBOperationFailedException("AppSettingsRepository", "_save_internal", sql, params, str(ex))
 

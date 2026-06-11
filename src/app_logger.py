@@ -19,6 +19,23 @@ class AppLogger:
     _is_initialized: bool = False
 
     @classmethod
+    def _colorize_console_message(cls, log_level: LogLevel, message: str) -> str:
+        reset = "\033[0m"
+
+        colors: dict[LogLevel, str] = {
+            LogLevel.INFO: "\033[32m",
+            LogLevel.WARNING: "\033[33m",
+            LogLevel.ERROR: "\033[31m",
+            LogLevel.CRITICAL: "\033[91m",
+            LogLevel.DEBUG: "\033[34m",
+            LogLevel.EXTENDED_DEBUG: "\033[36m",
+            LogLevel.DETAILED_DEBUG: "\033[38;5;110m",
+        }
+
+        color = colors.get(log_level, "")
+        return f"{color}{message}{reset}"
+
+    @classmethod
     def pre_initialize(cls) -> None:
         cls._logger.setLevel(logging.DEBUG)
 
@@ -83,11 +100,11 @@ class AppLogger:
     ) -> None:
         if cls._is_console_logging_allowed(log_level):
             formatted_message: str = (
-                f"{"":<11}  | "
-                f"{"[" + log_type.value.upper() + "]":<12}  | "
-                f"{class_name:<30} | "
-                f"{function_name:<30} | "
-                f"{message}"
+                f"{"":<11} | "
+                f"{"[" + log_type.value.upper() + "]":<10} | "
+                f"{class_name:<40} | "
+                f"{function_name:<30}"
+                f"\n--->   {message}"
             )
 
             json_text: str = ""
@@ -97,44 +114,48 @@ class AppLogger:
                 json_text = json_text.replace("\\n", "")
                 formatted_message = f"{formatted_message} | " f"{json_text}"
 
+            formatted_message = formatted_message + "\n\n"
+
             match log_level:
                 case LogLevel.INFO:
                     formatted_message: str = (
-                        f"{"":<11}  | " f"{"[" + log_type.value.upper() + "]":<12}  | " f"{"-":<30} | " f"{"-":<30} | " f"{message}"
+                        f"{"":<11} | " f"{"[" + log_type.value.upper() + "]":<10} | " f"{"-":<40} | " f"{"-":<30}" f"\n--->   {message}\n\n"
                     )
 
-                    cls._logger.info(formatted_message)
+                    cls._logger.info(cls._colorize_console_message(LogLevel.INFO, formatted_message))
                 case LogLevel.WARNING:
-                    cls._logger.warning(formatted_message)
+                    cls._logger.warning(cls._colorize_console_message(LogLevel.WARNING, formatted_message))
                 case LogLevel.ERROR:
-                    cls._logger.error(formatted_message)
+                    cls._logger.error(cls._colorize_console_message(LogLevel.ERROR, formatted_message))
                 case LogLevel.CRITICAL:
-                    cls._logger.critical(formatted_message)
+                    cls._logger.critical(cls._colorize_console_message(LogLevel.CRITICAL, formatted_message))
                 case LogLevel.DEBUG:
-                    cls._logger.debug(formatted_message)
+                    cls._logger.debug(cls._colorize_console_message(LogLevel.DEBUG, formatted_message))
                 case LogLevel.EXTENDED_DEBUG:
                     formatted_message: str = (
-                        f"{"(EXTENDED) ":<11}  | "
-                        f"{"[" + log_type.value.upper() + "]":<12}  | "
-                        f"{class_name:<30} | "
-                        f"{function_name:<30} | "
-                        f"{message}"
+                        f"{"(EXTENDED) ":<11} | "
+                        f"{"[" + log_type.value.upper() + "]":<10} | "
+                        f"{class_name:<40} | "
+                        f"{function_name:<30}"
+                        f"\n--->   {message}\n\n"
                     )
 
-                    cls._logger.debug(formatted_message)
+                    cls._logger.debug(cls._colorize_console_message(LogLevel.EXTENDED_DEBUG, formatted_message))
                 case LogLevel.DETAILED_DEBUG:
                     formatted_message: str = (
-                        f"{"(DETAILED) ":<11}  | "
-                        f"{"[" + log_type.value.upper() + "]":<12}  | "
-                        f"{class_name:<30} | "
-                        f"{function_name:<30} | "
-                        f"{message}"
+                        f"{"(DETAILED) ":<11} | "
+                        f"{"[" + log_type.value.upper() + "]":<10} | "
+                        f"{class_name:<40} | "
+                        f"{function_name:<30}"
+                        f"\n--->   {message}"
                     )
 
                     if details is not None:
                         formatted_message = f"{formatted_message} | " f"{json_text}"
 
-                    cls._logger.debug(formatted_message)
+                    formatted_message = formatted_message + "\n\n"
+
+                    cls._logger.debug(cls._colorize_console_message(LogLevel.DETAILED_DEBUG, formatted_message))
 
         if skip_database or not cls._is_initialized:
             return
@@ -165,8 +186,8 @@ class AppLogger:
                 )
             except Exception as ex:
                 formatted_message: str = (
-                    f"{"":<11}  | "
-                    f"{"[" + log_type.value.upper() + "]":<12}  | "
+                    f"{"":<11} | "
+                    f"{"[" + log_type.value.upper() + "]":<10} | "
                     f"{class_name:<30} | "
                     f"{function_name:<30} | "
                     f"Could not write log entry (message: {message}) to database: {ex}"

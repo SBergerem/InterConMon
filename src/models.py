@@ -137,7 +137,7 @@ class SpeedTestResult(BaseModel):
     external_ip: str | None
     error_message: str | None
     duration_sec: int | None
-    tool_name: str
+    tool: SpeedTestTool
 
 
 @dataclass

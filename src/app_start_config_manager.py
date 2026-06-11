@@ -5,8 +5,8 @@ from app_logger import AppLogger
 from models import LogType
 
 
-class ConfigManager:
-    _file_path = Path("config/settings.json")
+class AppStartConfigManager:
+    _file_path = Path("config/app_start_settings.json")
 
     @classmethod
     def _ensure_file_exists(cls) -> None:
@@ -27,7 +27,7 @@ class ConfigManager:
         with open(cls._file_path, "r", encoding="utf-8") as file:
             app_config.set_config_from_dict(json.load(file))
 
-        AppLogger.info(LogType.CONFIG, "App start config loaded", "ConfigManager", "load_config")
+        AppLogger.info(LogType.CONFIG, "App start config loaded", "AppStartConfigManager", "load_config")
 
         return app_config
 
@@ -36,4 +36,4 @@ class ConfigManager:
         with open(cls._file_path, "w", encoding="utf-8") as file:
             json.dump(config.get_config_as_dict(), file, indent=4)
 
-        AppLogger.info(LogType.CONFIG, "App start config saved", "ConfigManager", "save_config")
+        AppLogger.info(LogType.CONFIG, "App start config saved", "AppStartConfigManager", "save_config")

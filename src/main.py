@@ -1,5 +1,5 @@
 from runner import Runner
-from config_manager import ConfigManager
+from app_start_config_manager import AppStartConfigManager
 from app_start_config import AppStartConfig
 from database.database_manager import DatabaseManager
 from app_logger import AppLogger
@@ -28,15 +28,15 @@ def initialize_program() -> tuple[DatabaseManager, AppSettings]:
 
     AppLogger.info(LogType.SYSTEM, "Starting Initialization", "", "initialize_program")
 
-    config: AppStartConfig = ConfigManager.load_config()
+    app_start_config: AppStartConfig = AppStartConfigManager.load_config()
 
-    database_manager = DatabaseManager(config.database_config.path)
+    database_manager = DatabaseManager(app_start_config.database_config.path)
     database_manager.set_logging_callback(log_database_statement)
     database_initializer_repository: DatabaseInitializerRepository = DatabaseInitializerRepository(database_manager)
     database_initializer_repository.initialize_database()
 
-    enabled_console_log_levels: list[LogLevel] = config.log_config.enabled_console_log_levels
-    enabled_database_log_levels: list[LogLevel] = config.log_config.enabled_database_log_levels
+    enabled_console_log_levels: list[LogLevel] = app_start_config.log_config.enabled_console_log_levels
+    enabled_database_log_levels: list[LogLevel] = app_start_config.log_config.enabled_database_log_levels
     AppLogger.initialize(enabled_console_log_levels, enabled_database_log_levels, database_manager)
 
     app_settings_repository = AppSettingsRepository(database_manager)

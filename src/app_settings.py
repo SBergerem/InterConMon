@@ -1,8 +1,9 @@
 from threading import Lock
 import json
 from typing import Any
-from exceptions import ValueInvalidException
-from models import SpeedTestTool
+from exceptions import CustomException, ValueInvalidException
+from models import LogType, SpeedTestTool
+from app_logger import AppLogger
 
 
 class LatencyTestSettings:
@@ -133,7 +134,7 @@ class SpeedTestSettings:
         self._interval_minutes: int = 60
         self._run_upload: bool = True
         self._run_download: bool = True
-        self._tool: str = SpeedTestTool.UNKNOWN.value
+        self._tool: SpeedTestTool = SpeedTestTool.UNKNOWN
         self._max_duration_sec: int = 120
         self._server_id: str | None = None
         self._only_when_connection_ok: bool = True
@@ -154,7 +155,7 @@ class SpeedTestSettings:
         with self._lock_run_download:
             return self._run_download
 
-    def get_tool(self) -> str:
+    def get_tool(self) -> SpeedTestTool:
         with self._lock_tool:
             return self._tool
 
@@ -166,7 +167,7 @@ class SpeedTestSettings:
         with self._lock_server_id:
             return self._server_id
 
-    def get_only_get_connection_ok(self) -> bool:
+    def get_only_when_connection_ok(self) -> bool:
         with self._lock_only_when_connection_ok:
             return self._only_when_connection_ok
 
@@ -186,7 +187,7 @@ class SpeedTestSettings:
         with self._lock_run_download:
             self._run_download = run_download
 
-    def set_tool(self, tool: str) -> None:
+    def set_tool(self, tool: SpeedTestTool) -> None:
         with self._lock_tool:
             self._tool = tool
 
@@ -198,7 +199,7 @@ class SpeedTestSettings:
         with self._lock_server_id:
             self._server_id = server_id
 
-    def set_only_get_connection_ok(self, only_when_connection_ok: bool) -> None:
+    def set_only_when_connection_ok(self, only_when_connection_ok: bool) -> None:
         with self._lock_only_when_connection_ok:
             self._only_when_connection_ok = only_when_connection_ok
 
@@ -217,42 +218,51 @@ class AppSettings:
         self._speed_test_settings: SpeedTestSettings = SpeedTestSettings()
 
     def _add_settings(self, settings_name: str, settings_json: str) -> None:
-        settings: dict[str, Any] = json.loads(settings_json)
-        match settings_name:
-            case "latency_test_settings.targets":
-                self.get_latency_test_settings().set_targets(settings["targets"])
-            case "latency_test_settings.interval_seconds":
-                self.get_latency_test_settings().set_interval_seconds(settings["interval"])
-            case "latency_test_settings.enabled":
-                self.get_latency_test_settings().set_enabled(settings["enabled"])
-            case "outage_check.enabled":
-                self.get_outage_check_settings().set_enabled(settings["enabled"])
-            case "outage_check.max_failed_group_test_count":
-                self.get_outage_check_settings().set_max_failed_group_test_count(settings["count"])
-            case "gateway_test.enabled":
-                self.get_gateway_test_settings().set_enabled(settings["enabled"])
-            case "gateway_test.targets":
-                self.get_gateway_test_settings().set_targets(settings["targets"])
-            case "gateway_test.interval_seconds":
-                self.get_gateway_test_settings().set_interval_seconds(settings["interval"])
-            case "speed_test.enabled":
-                self.get_speed_test_settings().set_enabled(settings["enabled"])
-            case "speed_test.interval_minutes":
-                self.get_speed_test_settings().set_interval_minutes(settings["minutes"])
-            case "speed_test.run_upload":
-                self.get_speed_test_settings().set_run_update(settings["enabled"])
-            case "speed_test.run_download":
-                self.get_speed_test_settings().set_run_download(settings["enabled"])
-            case "speed_test.tool":
-                self.get_speed_test_settings().set_tool(settings["name"])
-            case "speed_test.max_duration_sec":
-                self.get_speed_test_settings().set_max_duration_sec(settings["seconds"])
-            case "speed_test.server_id":
-                self.get_speed_test_settings().set_server_id(settings["id"])
-            case "speed_test.only_when_connection_ok":
-                self.get_speed_test_settings().set_only_get_connection_ok(settings["enabled"])
-            case _:
-                pass
+        try:
+            settings: dict[str, Any] = json.loads(settings_json)
+            match settings_name:
+                case "latency_test_settings.targets":
+                    self.get_latency_test_settings().set_targets(settings["targets"])
+                case "latency_test_settings.interval_seconds":
+                    self.get_latency_test_settings().set_interval_seconds(settings["interval"])
+                case "latency_test_settings.enabled":
+                    self.get_latency_test_settings().set_enabled(settings["enabled"])
+                case "outage_check.enabled":
+                    self.get_outage_check_settings().set_enabled(settings["enabled"])
+                case "outage_check.max_failed_group_test_count":
+                    self.get_outage_check_settings().set_max_failed_group_test_count(settings["count"])
+                case "gateway_test.enabled":
+                    self.get_gateway_test_settings().set_enabled(settings["enabled"])
+                case "gateway_test.targets":
+                    self.get_gateway_test_settings().set_targets(settings["targets"])
+                case "gateway_test.interval_seconds":
+                    self.get_gateway_test_settings().set_interval_seconds(settings["interval"])
+                case "speed_test.enabled":
+                    self.get_speed_test_settings().set_enabled(settings["enabled"])
+                case "speed_test.interval_minutes":
+                    self.get_speed_test_settings().set_interval_minutes(settings["minutes"])
+                case "speed_test.run_upload":
+                    self.get_speed_test_settings().set_run_update(settings["enabled"])
+                case "speed_test.run_download":
+                    self.get_speed_test_settings().set_run_download(settings["enabled"])
+                case "speed_test.tool":
+                    self.get_speed_test_settings().set_tool(SpeedTestTool(settings["name"]))
+                case "speed_test.max_duration_sec":
+                    self.get_speed_test_settings().set_max_duration_sec(settings["seconds"])
+                case "speed_test.server_id":
+                    self.get_speed_test_settings().set_server_id(settings["id"])
+                case "speed_test.only_when_connection_ok":
+                    self.get_speed_test_settings().set_only_when_connection_ok(settings["enabled"])
+                case _:
+                    pass
+        except Exception as ex:
+            AppLogger.warning(
+                LogType.SETTINGS,
+                f"Could not load settings from JSON loaded from the database. Reason: {ex}",
+                "AppSettings",
+                "_add_settings",
+                details={"settings_json": settings_json},
+            )
 
     def add_from_dict(self, dict: list[tuple[str, str]]) -> None:
         for settings_name, settings_json in dict:
@@ -265,72 +275,77 @@ class AppSettings:
         self._add_settings(settings_name, settings_json)
 
     def get_as_dict(self) -> list[tuple[str, object]]:
-        return [
-            (
-                "latency_test_settings.enabled",
-                {"enabled": self.get_latency_test_settings().get_enabled()},
-            ),
-            (
-                "latency_test_settings.targets",
-                {"targets": self.get_latency_test_settings().get_targets()},
-            ),
-            (
-                "latency_test_settings.interval_seconds",
-                {"interval": self.get_latency_test_settings().get_interval_seconds()},
-            ),
-            (
-                "outage_check.enabled",
-                {"enabled": self.get_outage_check_settings().get_enabled()},
-            ),
-            (
-                "outage_check.max_failed_group_test_count",
-                {"count": self.get_outage_check_settings().get_max_failed_group_test_count()},
-            ),
-            (
-                "gateway_test.targets",
-                {"targets": self.get_gateway_test_settings().get_targets()},
-            ),
-            (
-                "gateway_test.enabled",
-                {"enabled": self.get_gateway_test_settings().get_enabled()},
-            ),
-            (
-                "gateway_test.interval_seconds",
-                {"interval": self.get_gateway_test_settings().get_interval_seconds()},
-            ),
-            (
-                "speed_test.enabled",
-                {"interval": self.get_speed_test_settings().get_enabled()},
-            ),
-            (
-                "speed_test.interval_minutes",
-                {"interval": self.get_speed_test_settings().get_interval_minutes()},
-            ),
-            (
-                "speed_test.run_upload",
-                {"interval": self.get_speed_test_settings().get_run_update()},
-            ),
-            (
-                "speed_test.run_download",
-                {"interval": self.get_speed_test_settings().get_run_download()},
-            ),
-            (
-                "speed_test.tool",
-                {"interval": self.get_speed_test_settings().get_tool()},
-            ),
-            (
-                "speed_test.max_duration_sec",
-                {"interval": self.get_speed_test_settings().get_max_duration_sec()},
-            ),
-            (
-                "speed_test.server_id",
-                {"interval": self.get_speed_test_settings().get_server_id()},
-            ),
-            (
-                "speed_test.only_when_connection_ok",
-                {"interval": self.get_speed_test_settings().get_only_get_connection_ok()},
-            ),
-        ]
+        try:
+            return [
+                (
+                    "latency_test_settings.enabled",
+                    {"enabled": self.get_latency_test_settings().get_enabled()},
+                ),
+                (
+                    "latency_test_settings.targets",
+                    {"targets": self.get_latency_test_settings().get_targets()},
+                ),
+                (
+                    "latency_test_settings.interval_seconds",
+                    {"interval": self.get_latency_test_settings().get_interval_seconds()},
+                ),
+                (
+                    "outage_check.enabled",
+                    {"enabled": self.get_outage_check_settings().get_enabled()},
+                ),
+                (
+                    "outage_check.max_failed_group_test_count",
+                    {"count": self.get_outage_check_settings().get_max_failed_group_test_count()},
+                ),
+                (
+                    "gateway_test.targets",
+                    {"targets": self.get_gateway_test_settings().get_targets()},
+                ),
+                (
+                    "gateway_test.enabled",
+                    {"enabled": self.get_gateway_test_settings().get_enabled()},
+                ),
+                (
+                    "gateway_test.interval_seconds",
+                    {"interval": self.get_gateway_test_settings().get_interval_seconds()},
+                ),
+                (
+                    "speed_test.enabled",
+                    {"enabled": self.get_speed_test_settings().get_enabled()},
+                ),
+                (
+                    "speed_test.interval_minutes",
+                    {"minutes": self.get_speed_test_settings().get_interval_minutes()},
+                ),
+                (
+                    "speed_test.run_upload",
+                    {"enabled": self.get_speed_test_settings().get_run_update()},
+                ),
+                (
+                    "speed_test.run_download",
+                    {"enabled": self.get_speed_test_settings().get_run_download()},
+                ),
+                (
+                    "speed_test.tool",
+                    {"name": self.get_speed_test_settings().get_tool().value},
+                ),
+                (
+                    "speed_test.max_duration_sec",
+                    {"seconds": self.get_speed_test_settings().get_max_duration_sec()},
+                ),
+                (
+                    "speed_test.server_id",
+                    {"id": self.get_speed_test_settings().get_server_id()},
+                ),
+                (
+                    "speed_test.only_when_connection_ok",
+                    {"enabled": self.get_speed_test_settings().get_only_when_connection_ok()},
+                ),
+            ]
+        except Exception as ex:
+            raise CustomException(
+                "AppSettings", "get_as_dict", f"Could not convert settings to JSON to save them in the database. Reason: {ex}"
+            )
 
     def get_latency_test_settings(self) -> LatencyTestSettings:
         with self._lock_latency_test_settings:

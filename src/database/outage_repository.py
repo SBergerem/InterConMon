@@ -70,7 +70,7 @@ class OutageRepository(BaseRepository):
             rows: list[Any] = cursor.fetchall()
 
             self._log_statement(
-                "LatencyTestRepository",
+                "OutageRepository",
                 "_load_internal",
                 cursor,
                 {"sql": sql, "params": {}, "row_count": len(rows)},
