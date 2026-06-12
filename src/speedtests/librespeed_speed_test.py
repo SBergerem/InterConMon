@@ -24,8 +24,8 @@ class LibreSpeedSpeedTest(BaseSpeedTest):
 
         start: float = time.perf_counter()
         result: tuple[bool, str, str] = self._execute_command(["--json"])
-        end = time.perf_counter()
-        time_needed = end - start
+        end: float = time.perf_counter()
+        time_needed: float = end - start
 
         speedtest_result: Any = json.loads(result[1])
         client: Any = speedtest_result["client"]
@@ -46,6 +46,6 @@ class LibreSpeedSpeedTest(BaseSpeedTest):
             None,
             client["ip"],
             result[2],
-            None,
+            time_needed,
             SpeedTestTool.LIBRESPEED_CLI,
         )
