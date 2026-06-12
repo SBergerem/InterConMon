@@ -1,0 +1,28 @@
+{
+    "encryption": {
+        "secret_path": "./config/secret.key"
+    },
+    "database": {
+        "path": "./data/interconmon.db"
+    },
+    "logs": {
+        "enabled_console_log_levels": [
+            "info",
+            "warning",
+            "error",
+            "critical",
+            "debug",
+            "extended_debug",
+            "detailed_debug"
+        ],
+        "enabled_database_log_levels": [
+            "info",
+            "warning",
+            "error",
+            "critical",
+            "debug",
+            "extended_debug",
+            "detailed_debug"
+        ]
+    }
+}

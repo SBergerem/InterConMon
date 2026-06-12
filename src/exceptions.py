@@ -115,3 +115,23 @@ class MethodNotImplementedException(CustomException):
             f"Function {function_name} in class {class_name} is not implemented!",
             exception_name="MethodNotImplementedException",
         )
+
+
+class CLINotInstalledException(CustomException):
+    def __init__(self, cli_name: str, class_name: str, function_name: str) -> None:
+        super().__init__(
+            class_name,
+            function_name,
+            f"The configured CLI ({cli_name}) is not available. Please install it and try again, or choose an other CLI.",
+            exception_name="CLINotInstalledException",
+        )
+
+
+class CLICommandException(CustomException):
+    def __init__(self, class_name: str, function_name: str, message: str, command: str) -> None:
+        super().__init__(
+            class_name,
+            function_name,
+            f"Error while executing the command ({command}). Reason: {message}.",
+            exception_name="CLICommandException",
+        )

@@ -3,6 +3,7 @@ from models import SpeedTestResult, SpeedTestTool
 from exceptions import CustomException
 from speedtests.base_speed_test import BaseSpeedTest
 from speedtests.unknown_speed_test import UnknownSpeedTest
+from speedtests.librespeed_speed_test import LibreSpeedSpeedTest
 
 
 class SpeedTestExecutor:
@@ -12,7 +13,9 @@ class SpeedTestExecutor:
 
         match tool:
             case SpeedTestTool.UNKNOWN:
-                return UnknownSpeedTest()
+                return UnknownSpeedTest(self._settings)
+            case SpeedTestTool.LIBRESPEED_CLI:
+                return LibreSpeedSpeedTest(self._settings)
             case _:
                 raise CustomException(
                     "SpeedTestExecutor",

@@ -125,10 +125,11 @@ class DatabaseInitializerRepository(BaseRepository):
                         server_name TEXT,
                         server_location TEXT,
                         server_id INTEGER,
+                        server_url TEXT,
                         isp TEXT,
                         external_ip TEXT,
                         error_message TEXT,
-                        duration_sec INTEGER,
+                        duration_sec REAL,
                         tool_name TEST NOT NULL
                 )
             """,

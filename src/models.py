@@ -133,10 +133,11 @@ class SpeedTestResult(BaseModel):
     server_name: str | None
     server_location: str | None
     server_id: int | None
+    server_url: str | None
     isp: str | None
     external_ip: str | None
     error_message: str | None
-    duration_sec: int | None
+    duration_sec: float | None
     tool: SpeedTestTool
 
 

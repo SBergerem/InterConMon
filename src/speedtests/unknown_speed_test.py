@@ -6,6 +6,9 @@ from datetime import datetime
 
 class UnknownSpeedTest(BaseSpeedTest):
 
+    def _set_console_start_command(self) -> None:
+        self._console_start_command = ""
+
     def _is_cli_available(self) -> bool:
         return super()._is_cli_available()
 

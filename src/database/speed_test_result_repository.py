@@ -22,13 +22,14 @@ class SpeedTestResultRepository(BaseRepository):
             str | None,
             str | None,
             str | None,
-            int | None,
+            str | None,
+            float | None,
             str,
-        ] = ("", False, None, None, None, None, None, None, None, None, None, None, None, "")
+        ] = ("", False, None, None, None, None, None, None, None, None, None, None, None, None, "")
         try:
             sql = """
                 INSERT INTO speed_test_results (date_time, success, download_mbps, upload_mbps, ping_ms, jitter_ms, server_name, 
-                server_location, server_id, isp, external_ip, error_message, duration_sec, tool_name) 
+                server_location, server_id, server_url, isp, external_ip, error_message, duration_sec, tool_name) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
 
@@ -43,6 +44,7 @@ class SpeedTestResultRepository(BaseRepository):
                     result.server_name,
                     result.server_location,
                     result.server_id,
+                    result.server_url,
                     result.isp,
                     result.external_ip,
                     result.error_message,
@@ -71,7 +73,7 @@ class SpeedTestResultRepository(BaseRepository):
         try:
             sql = f""" 
                 SELECT id, date_time, success, download_mbps, upload_mbps, ping_ms, jitter_ms, server_name, 
-                server_location, server_id, isp, external_ip, error_message, duration_sec, tool_name 
+                server_location, server_id, server_url, isp, external_ip, error_message, duration_sec, tool_name 
                 FROM speed_test_results {internal_where_statement}
             """
 
@@ -97,6 +99,7 @@ class SpeedTestResultRepository(BaseRepository):
                 server_name,
                 server_location,
                 server_id,
+                server_url,
                 isp,
                 external_ip,
                 error_message,
@@ -115,6 +118,7 @@ class SpeedTestResultRepository(BaseRepository):
                         server_name,
                         server_location,
                         server_id,
+                        server_url,
                         isp,
                         external_ip,
                         error_message,
