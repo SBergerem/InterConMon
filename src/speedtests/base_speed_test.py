@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
-from models import SpeedTestResult
+from models import SpeedTestResult, LogType
 from app_settings import SpeedTestSettings
 import subprocess
 from exceptions import CLICommandException
+from app_logger import AppLogger
+import shutil
 
 
 class BaseSpeedTest(ABC):
@@ -21,9 +23,13 @@ class BaseSpeedTest(ABC):
         try:
             complete_command = [self._console_start_command] + command
 
+            AppLogger.debug(LogType.SCAN, "Starting speedtest. This takes some time..", "BaseSpeedTest", "_execute_command")
+
             result: subprocess.CompletedProcess[str] = subprocess.run(
                 complete_command, capture_output=True, text=True, timeout=self._settings.get_max_duration_sec()
             )
+
+            AppLogger.debug(LogType.SCAN, f"Speedtest finished with return code {result.returncode}", "BaseSpeedTest", "_execute_command")
 
             print(result.returncode)
             print(result.stderr)
@@ -33,9 +39,8 @@ class BaseSpeedTest(ABC):
         except Exception as ex:
             raise CLICommandException("BaseSpeedTest", "_execute_command", str(ex), " ".join(complete_command))
 
-    @abstractmethod
-    def _is_cli_available(self) -> bool:
-        return True
+    def _is_cli_available(self, name: str) -> bool:
+        return shutil.which(name) is not None
 
     @abstractmethod
     def execute(self) -> SpeedTestResult:

@@ -12,14 +12,28 @@ class LibreSpeedSpeedTest(BaseSpeedTest):
     def _set_console_start_command(self) -> None:
         self._console_start_command = "librespeed-cli"
 
-    def _is_cli_available(self) -> bool:
-        try:
-            return self._execute_command(["--version"])[0]
-        except:
-            return False
+    def _create_error_result(self, error_message: str | None, time_needed: float) -> SpeedTestResult:
+        return SpeedTestResult(
+            0,
+            datetime.now().isoformat(),
+            False,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            error_message,
+            time_needed,
+            SpeedTestTool.LIBRESPEED_CLI,
+        )
 
     def execute(self) -> SpeedTestResult:
-        if not self._is_cli_available():
+        if not self._is_cli_available("librespeed-cli"):
             raise CLINotInstalledException("LibreSpeed-CLI", "LibreSpeedSpeedTest", "execute")
 
         start: float = time.perf_counter()
@@ -27,25 +41,37 @@ class LibreSpeedSpeedTest(BaseSpeedTest):
         end: float = time.perf_counter()
         time_needed: float = end - start
 
-        speedtest_result: Any = json.loads(result[1])
-        client: Any = speedtest_result["client"]
-        server: Any = speedtest_result["server"]
+        error_message: str | None = result[2] if result[2] != "" else None
+
+        if not result[0]:
+            return self._create_error_result(error_message, time_needed)
+
+        speedtest_result: Any = {}
+        try:
+            # index of 0, because librespeed-cli returns a list
+            speedtest_result = json.loads(result[1])[0]
+        except Exception:
+            error_message = "Could not parse LibreSpeed JSON result"
+            return self._create_error_result(error_message, time_needed)
+
+        client: Any = speedtest_result.get("client") or {}
+        server: Any = speedtest_result.get("server") or {}
 
         return SpeedTestResult(
             0,
             datetime.now().isoformat(),
-            result[0],
-            speedtest_result["download"],
-            speedtest_result["upload"],
-            speedtest_result["ping"],
-            speedtest_result["jitter"],
-            server["name"],
+            True,
+            speedtest_result.get("download"),
+            speedtest_result.get("upload"),
+            speedtest_result.get("ping"),
+            speedtest_result.get("jitter"),
+            server.get("name") or None,
             None,
             None,
-            server["url"],
+            server.get("url") or None,
             None,
-            client["ip"],
-            result[2],
+            client.get("ip") or None,
+            error_message,
             time_needed,
             SpeedTestTool.LIBRESPEED_CLI,
         )

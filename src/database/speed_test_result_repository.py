@@ -30,7 +30,7 @@ class SpeedTestResultRepository(BaseRepository):
             sql = """
                 INSERT INTO speed_test_results (date_time, success, download_mbps, upload_mbps, ping_ms, jitter_ms, server_name, 
                 server_location, server_id, server_url, isp, external_ip, error_message, duration_sec, tool_name) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
 
             for result in results:

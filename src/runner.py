@@ -189,16 +189,21 @@ class Runner:
 
     def _run_speedtest(self, speed_test_settings: SpeedTestSettings, is_connected_ok: bool) -> float:
         next_speed_test: float = (speed_test_settings.get_interval_minutes() * 60) + time.time()
-        if not speed_test_settings.get_enabled():
-            return next_speed_test
 
-        only_when_connection_ok: bool = speed_test_settings.get_only_when_connection_ok()
+        try:
+            if not speed_test_settings.get_enabled():
+                return next_speed_test
 
-        if only_when_connection_ok and not is_connected_ok:
-            return next_speed_test
+            only_when_connection_ok: bool = speed_test_settings.get_only_when_connection_ok()
 
-        speed_test_result: SpeedTestResult = SpeedTestExecutor(speed_test_settings).run()
-        self._speed_test_result_repository.save([speed_test_result])
+            if only_when_connection_ok and not is_connected_ok:
+                return next_speed_test
+
+            speed_test_result: SpeedTestResult = SpeedTestExecutor(speed_test_settings).run()
+            self._speed_test_result_repository.save([speed_test_result])
+        except CustomException as ex:
+            AppLogger.error(LogType.SYSTEM, str(ex), ex.class_name, ex.function_name)
+
         return next_speed_test
 
     # Checks, if the thread isn't already running. If it's not it's starting the thread
