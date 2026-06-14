@@ -68,16 +68,18 @@ class SpeedTestResultRepository(BaseRepository):
         except Exception as ex:
             raise DBOperationFailedException("SpeedTestResultRepository", "_save_internal", sql, params, str(ex))
 
-    def _load_internal(self, cursor: Cursor, internal_where_statement: str = "") -> list[SpeedTestResult]:
+    def _load_internal(
+        self, cursor: Cursor, statement_addition: str = "", addition_placeholder_values: list[Any] = []
+    ) -> list[SpeedTestResult]:
         sql: str = ""
         try:
             sql = f""" 
                 SELECT id, date_time, success, download_mbps, upload_mbps, ping_ms, jitter_ms, server_name, 
                 server_location, server_id, server_url, isp, external_ip, error_message, duration_sec, tool_name 
-                FROM speed_test_results {internal_where_statement}
+                FROM speed_test_results {statement_addition}
             """
 
-            cursor.execute(sql)
+            cursor.execute(sql, addition_placeholder_values)
             rows: list[Any] = cursor.fetchall()
 
             self._log_statement(
@@ -134,5 +136,11 @@ class SpeedTestResultRepository(BaseRepository):
     def save(self, results: list[SpeedTestResult]) -> None:
         return self._database_manager.run_in_transaction(lambda cursor: self._save_internal(cursor, results))
 
-    def load(self, internal_where_statement: str = "") -> list[SpeedTestResult]:
-        return self._database_manager.run_in_transaction(lambda cursor: self._load_internal(cursor, internal_where_statement))
+    def load(self, statement_addition: str = "") -> list[SpeedTestResult]:
+        return self._database_manager.run_in_transaction(lambda cursor: self._load_internal(cursor, statement_addition))
+
+    def load_latest(self) -> SpeedTestResult | None:
+        result: list[SpeedTestResult] = self._database_manager.run_in_transaction(
+            lambda cursor: self._load_internal(cursor, "ORDER BY date_time DESC LIMIT 1")
+        )
+        return result[0] if len(result) == 1 else None

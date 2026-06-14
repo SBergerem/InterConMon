@@ -44,15 +44,17 @@ class LatencyTestGroupRepository(BaseRepository):
         except Exception as ex:
             raise DBOperationFailedException("LatencyTestGroupRepository", "_save_internal", sql, params, str(ex))
 
-    def _load_internal(self, cursor: Cursor, internal_where_statement: str = "") -> list[LatencyTestGroup]:
+    def _load_internal(
+        self, cursor: Cursor, statement_addition: str = "", addition_placeholder_values: list[Any] = []
+    ) -> list[LatencyTestGroup]:
         sql: str = ""
         try:
             sql = f"""
                 SELECT id, start_time, end_time, time_needed_sec, any_success,
-                group_success, test_target_type FROM latency_test_groups {internal_where_statement}
+                group_success, test_target_type FROM latency_test_groups {statement_addition}
             """
 
-            cursor.execute(sql)
+            cursor.execute(sql, addition_placeholder_values)
             rows: list[Any] = cursor.fetchall()
 
             self._log_statement(
@@ -64,9 +66,7 @@ class LatencyTestGroupRepository(BaseRepository):
 
             groups: list[LatencyTestGroup] = []
             for id, start_time, end_time, time_needed_sec, any_success, group_success, test_target_type in rows:
-                groups.append(
-                    LatencyTestGroup(id, start_time, end_time, time_needed_sec, any_success, group_success, test_target_type)
-                )
+                groups.append(LatencyTestGroup(id, start_time, end_time, time_needed_sec, any_success, group_success, test_target_type))
 
             return groups
         except Exception as ex:
@@ -78,5 +78,5 @@ class LatencyTestGroupRepository(BaseRepository):
     def save_in_transaction(self, latency_test_groups: list[LatencyTestGroup], cursor: Cursor) -> None:
         self._save_internal(cursor, latency_test_groups)
 
-    def load(self, internal_where_statement: str = "") -> list[LatencyTestGroup]:
-        return self._database_manager.run_in_transaction(lambda cursor: self._load_internal(cursor, internal_where_statement))
+    def load(self, statement_addition: str = "") -> list[LatencyTestGroup]:
+        return self._database_manager.run_in_transaction(lambda cursor: self._load_internal(cursor, statement_addition))

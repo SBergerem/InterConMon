@@ -99,6 +99,7 @@ class LatencyTestGroup(BaseModel):
 
 @dataclass
 class Outage(BaseModel):
+    date_time: str
     reachability_state: ReachabilityState
     last_connection_test: str
     change_state: OutageChangeState

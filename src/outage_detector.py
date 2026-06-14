@@ -75,6 +75,7 @@ class OutageDetector:
 
         return Outage(
             0,
+            datetime.now().isoformat(),
             self._current_reachability_state,
             connection_test_date_time,
             change_state,
@@ -85,7 +86,7 @@ class OutageDetector:
             started_group_id,
             None,
             ended_group_id,
-            None
+            None,
         )
 
     def set_max_failed_group_test_count(self, max_failed_group_test_count: int) -> None:

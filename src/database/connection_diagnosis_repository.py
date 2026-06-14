@@ -40,14 +40,16 @@ class ConnectionDiagnosisRepository(BaseRepository):
         except Exception as ex:
             raise DBOperationFailedException("ConnectionStatusDiagnosisRepository", "_save_internal", sql, params, str(ex))
 
-    def _load_internal(self, cursor: Cursor, internal_where_statement: str = "") -> list[ConnectionDiagnosis]:
+    def _load_internal(
+        self, cursor: Cursor, statement_addition: str = "", addition_placeholder_values: list[Any] = []
+    ) -> list[ConnectionDiagnosis]:
         sql: str = ""
         try:
             sql: str = f"""
-                SELECT id, date_time, network_diagnosis_type, gateway_latency_test_group_id, server_latency_test_group_id FROM connection_diagnoses {internal_where_statement}
+                SELECT id, date_time, network_diagnosis_type, gateway_latency_test_group_id, server_latency_test_group_id FROM connection_diagnoses {statement_addition}
             """
 
-            cursor.execute(sql)
+            cursor.execute(sql, addition_placeholder_values)
             rows: list[Any] = cursor.fetchall()
 
             self._log_statement(
@@ -72,5 +74,11 @@ class ConnectionDiagnosisRepository(BaseRepository):
     def save(self, diagnoses: list[ConnectionDiagnosis]) -> None:
         self._database_manager.run_in_transaction(lambda cursor: self._save_internal(cursor, diagnoses))
 
-    def load(self, internal_where_statement: str = "") -> list[ConnectionDiagnosis]:
-        return self._database_manager.run_in_transaction(lambda cursor: self._load_internal(cursor, internal_where_statement))
+    def load(self, statement_addition: str = "") -> list[ConnectionDiagnosis]:
+        return self._database_manager.run_in_transaction(lambda cursor: self._load_internal(cursor, statement_addition))
+
+    def load_latest(self) -> ConnectionDiagnosis | None:
+        result: list[ConnectionDiagnosis] = self._database_manager.run_in_transaction(
+            lambda cursor: self._load_internal(cursor, "ORDER BY date_time DESC LIMIT 1")
+        )
+        return result[0] if len(result) == 1 else None

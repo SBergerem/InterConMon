@@ -43,14 +43,16 @@ class LatencyTestRepository(BaseRepository):
         except Exception as ex:
             raise DBOperationFailedException("LatencyTestRepository", "_save_internal", sql, params, str(ex))
 
-    def _load_internal(self, cursor: Cursor, internal_where_statement: str = "") -> list[LatencyTest]:
+    def _load_internal(
+        self, cursor: Cursor, statement_addition: str = "", addition_placeholder_values: list[Any] = []
+    ) -> list[LatencyTest]:
         sql: str = ""
         try:
             sql: str = f"""
-                SELECT id, group_id, date_time, target, test_target_type, success, latency_ms, error_message FROM latency_tests {internal_where_statement}
+                SELECT id, group_id, date_time, target, test_target_type, success, latency_ms, error_message FROM latency_tests {statement_addition}
             """
 
-            cursor.execute(sql)
+            cursor.execute(sql, addition_placeholder_values)
             rows: list[Any] = cursor.fetchall()
 
             self._log_statement(
@@ -74,12 +76,12 @@ class LatencyTestRepository(BaseRepository):
     def save_in_transaction(self, latency_tests: list[LatencyTest], cursor: Cursor) -> None:
         self._save_internal(cursor, latency_tests)
 
-    def load(self, internal_where_statement: str = "") -> list[LatencyTest]:
-        return self._database_manager.run_in_transaction(lambda cursor: self._load_internal(cursor, internal_where_statement))
+    def load(self, statement_addition: str = "") -> list[LatencyTest]:
+        return self._database_manager.run_in_transaction(lambda cursor: self._load_internal(cursor, statement_addition))
 
     def load_in_test_group(self, latency_test_group: LatencyTestGroup) -> None:
         latency_tests: list[LatencyTest] = self._database_manager.run_in_transaction(
-            lambda cursor: self._load_internal(cursor, f"WHERE group_id = ({latency_test_group.id})")
+            lambda cursor: self._load_internal(cursor, "WHERE group_id = ?", [latency_test_group.id])
         )
 
         latency_test_group.tests = latency_tests

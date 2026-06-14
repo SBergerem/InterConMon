@@ -20,7 +20,7 @@ class DatabaseManager:
     # Opens a connection, enables foreign keys and return the connection, so everytime foreign keys are being use by sqlite
     def _open_connection(self) -> Connection:
         try:
-            connection = sqlite3.connect(self._database_path, timeout=10)
+            connection: Connection = sqlite3.connect(self._database_path, timeout=10)
             connection.execute("PRAGMA foreign_keys = ON")
             return connection
         except Exception as ex:

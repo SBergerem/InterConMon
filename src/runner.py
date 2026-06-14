@@ -29,16 +29,25 @@ from speedtest_executor import SpeedTestExecutor
 
 class Runner:
 
-    def __init__(self, database_manager: DatabaseManager, app_settings: AppSettings) -> None:
+    def __init__(
+        self,
+        database_manager: DatabaseManager,
+        latency_test_repository: LatencyTestRepository,
+        latency_test_group_repository: LatencyTestGroupRepository,
+        outage_repository: OutageRepository,
+        connection_diagnosis_repository: ConnectionDiagnosisRepository,
+        speed_test_result_repository: SpeedTestResultRepository,
+        app_settings: AppSettings,
+    ) -> None:
         self._loop_thread: Thread | None = None
         self._stop_event: Event = Event()
         self._app_settings: AppSettings = app_settings
         self._database_manager: DatabaseManager = database_manager
-        self._latency_test_repository: LatencyTestRepository = LatencyTestRepository(database_manager)
-        self._latency_test_group_repository: LatencyTestGroupRepository = LatencyTestGroupRepository(database_manager)
-        self._outage_repository: OutageRepository = OutageRepository(database_manager)
-        self._connection_diagnosis_repository: ConnectionDiagnosisRepository = ConnectionDiagnosisRepository(database_manager)
-        self._speed_test_result_repository: SpeedTestResultRepository = SpeedTestResultRepository(database_manager)
+        self._latency_test_repository: LatencyTestRepository = latency_test_repository
+        self._latency_test_group_repository: LatencyTestGroupRepository = latency_test_group_repository
+        self._outage_repository: OutageRepository = outage_repository
+        self._connection_diagnosis_repository: ConnectionDiagnosisRepository = connection_diagnosis_repository
+        self._speed_test_result_repository: SpeedTestResultRepository = speed_test_result_repository
 
     # Return True, if the thread is already running. Checks log
     def is_running(self) -> bool:
@@ -144,8 +153,10 @@ class Runner:
         if outage_check_enabled:
             outage: Outage = self._run_outage_detection(outage_detector, max_failed_group_test_count, test_group, test_target_type)
 
-            if outage.change_state == OutageChangeState.ENDED:
+            if outage.change_state == OutageChangeState.STARTED:
                 self._outage_repository.save([outage])
+            if outage.change_state == OutageChangeState.ENDED:
+                self._outage_repository.update([outage])
                 AppLogger.info(
                     LogType.OUTAGE,
                     "Outage ended",

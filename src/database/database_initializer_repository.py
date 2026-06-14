@@ -54,6 +54,7 @@ class DatabaseInitializerRepository(BaseRepository):
             self._execute_sql_statement(
                 """ CREATE TABLE IF NOT EXISTS outages(
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        date_time TEXT NOT NULL,
                         reachability_state TEXT NOT NULL,
                         test_target_type TEXT NOT NULL,
                         last_connection_test TEXT NOT NULL,
