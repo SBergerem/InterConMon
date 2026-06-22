@@ -1,6 +1,6 @@
-from backend.src.scanning.speedtests.base_speed_test import BaseSpeedTest
-from backend.src.models.models import SpeedTestResult, SpeedTestTool
-from backend.src.exceptions.exceptions import CLINotInstalledException
+from scanning.speedtests.base_speed_test import BaseSpeedTest
+from models.models import SpeedTestResult, SpeedTestTool
+from exceptions.exceptions import CLINotInstalledException
 from datetime import datetime
 import json
 from typing import Any

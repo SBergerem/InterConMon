@@ -1,6 +1,6 @@
-from backend.src.database.base_repository import BaseRepository
+from database.base_repository import BaseRepository
 from sqlite3 import Cursor
-from backend.src.exceptions.exceptions import DBOperationFailedException
+from exceptions.exceptions import DBOperationFailedException
 
 
 class DatabaseInitializerRepository(BaseRepository):

@@ -1,6 +1,6 @@
 from sqlite3 import Cursor
-from backend.src.exceptions.exceptions import DBOperationFailedException
-from backend.src.database.database_manager import DatabaseManager
+from exceptions.exceptions import DBOperationFailedException
+from database.database_manager import DatabaseManager
 
 
 class BaseRepository:

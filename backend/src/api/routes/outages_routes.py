@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
-from backend.src.api.api_context import ApiContext
-from backend.src.database.outage_repository import OutageRepository
-from backend.src.models.models import Outage
+from api.api_context import ApiContext
+from database.outage_repository import OutageRepository
+from models.models import Outage
 from typing import Any
 
 router = APIRouter(prefix="/api/outages")

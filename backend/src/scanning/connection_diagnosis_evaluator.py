@@ -1,6 +1,6 @@
-from backend.src.models.models import LatencyTestGroup, ConnectionDiagnosis, NetworkDiagnosisType, LogType
+from models.models import LatencyTestGroup, ConnectionDiagnosis, NetworkDiagnosisType, LogType
 from datetime import datetime
-from backend.src.utils.app_logger import AppLogger
+from utils.app_logger import AppLogger
 
 
 class ConnectionDiagnosisEvaluator:

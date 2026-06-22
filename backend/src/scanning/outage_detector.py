@@ -1,6 +1,6 @@
 from datetime import datetime
-from backend.src.models.models import Outage, ReachabilityState, OutageChangeState, LatencyTestGroup, LogType, TestTargetType
-from backend.src.utils.app_logger import AppLogger
+from models.models import Outage, ReachabilityState, OutageChangeState, LatencyTestGroup, LogType, TestTargetType
+from utils.app_logger import AppLogger
 
 
 class OutageDetector:

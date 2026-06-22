@@ -5,9 +5,9 @@ import re
 from datetime import datetime
 from typing import Any, Literal
 from ping3 import ping  # type: ignore[import]
-from backend.src.models.models import LatencyTest, LatencyTestGroup, LogType, TestTargetType
-from backend.src.utils.app_logger import AppLogger
-from backend.src.exceptions.exceptions import ListIsEmptyException
+from models.models import LatencyTest, LatencyTestGroup, LogType, TestTargetType
+from utils.app_logger import AppLogger
+from exceptions.exceptions import ListIsEmptyException
 import time
 
 

@@ -1,11 +1,11 @@
-from backend.src.models.models import LogEntry, LogLevel, LogType
+from models.models import LogEntry, LogLevel, LogType
 import logging
 from logging import Logger, StreamHandler
 from datetime import datetime
 import json
 from typing import TYPE_CHECKING, TextIO
 from sqlite3 import Cursor
-from backend.src.database.log_entry_repository import LogEntryRepository
+from database.log_entry_repository import LogEntryRepository
 
 if TYPE_CHECKING:
     from backend.src.database.database_manager import DatabaseManager

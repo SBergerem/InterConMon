@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, Query
-from backend.src.api.api_context import ApiContext
-from backend.src.database.log_entry_repository import LogEntryRepository
-from backend.src.models.models import LogEntry, LogType, LogLevel
+from api.api_context import ApiContext
+from database.log_entry_repository import LogEntryRepository
+from models.models import LogEntry, LogType, LogLevel
 from typing import Any
 
 router = APIRouter(prefix="/api/logs")

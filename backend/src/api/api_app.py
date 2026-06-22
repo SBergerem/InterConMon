@@ -1,10 +1,10 @@
 from fastapi import FastAPI
-from backend.src.api.api_context import ApiContext
-from backend.src.api.routes.health_routes import router as health_router
-from backend.src.api.routes.speed_test_routes import router as speedtests_router
-from backend.src.api.routes.connection_routes import router as connection_router
-from backend.src.api.routes.logs_routes import router as log_router
-from backend.src.api.routes.outages_routes import router as outage_router
+from api.api_context import ApiContext
+from api.routes.health_routes import router as health_router
+from api.routes.speed_test_routes import router as speedtests_router
+from api.routes.connection_routes import router as connection_router
+from api.routes.logs_routes import router as log_router
+from api.routes.outages_routes import router as outage_router
 
 
 def health_check() -> dict[str, str]:

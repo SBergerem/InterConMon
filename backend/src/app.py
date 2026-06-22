@@ -1,23 +1,23 @@
 from fastapi import FastAPI
 
-from backend.src.scanning.runner import Runner
-from backend.src.settings.app_start_config_manager import AppStartConfigManager
-from backend.src.settings.app_start_config import AppStartConfig
-from backend.src.database.database_manager import DatabaseManager
-from backend.src.utils.app_logger import AppLogger
-from backend.src.models.models import LogLevel, LogType
-from backend.src.settings.app_settings import AppSettings
-from backend.src.database.app_settings_repository import AppSettingsRepository
-from backend.src.database.database_initializer_repository import DatabaseInitializerRepository
-from backend.src.database.speed_test_result_repository import SpeedTestResultRepository
-from backend.src.database.latency_test_repository import LatencyTestRepository
-from backend.src.database.latency_test_group_repository import LatencyTestGroupRepository
-from backend.src.database.connection_diagnosis_repository import ConnectionDiagnosisRepository
-from backend.src.database.log_entry_repository import LogEntryRepository
-from backend.src.database.outage_repository import OutageRepository
+from scanning.runner import Runner
+from settings.app_start_config_manager import AppStartConfigManager
+from settings.app_start_config import AppStartConfig
+from database.database_manager import DatabaseManager
+from utils.app_logger import AppLogger
+from models.models import LogLevel, LogType
+from settings.app_settings import AppSettings
+from database.app_settings_repository import AppSettingsRepository
+from database.database_initializer_repository import DatabaseInitializerRepository
+from database.speed_test_result_repository import SpeedTestResultRepository
+from database.latency_test_repository import LatencyTestRepository
+from database.latency_test_group_repository import LatencyTestGroupRepository
+from database.connection_diagnosis_repository import ConnectionDiagnosisRepository
+from database.log_entry_repository import LogEntryRepository
+from database.outage_repository import OutageRepository
 from sqlite3 import Cursor
-from backend.src.api.api_app import create_app
-from backend.src.api.api_context import ApiContext
+from api.api_app import create_app
+from api.api_context import ApiContext
 import uvicorn
 
 

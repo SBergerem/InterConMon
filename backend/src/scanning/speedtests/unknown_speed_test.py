@@ -1,6 +1,6 @@
 # dummy class
-from backend.src.scanning.speedtests.base_speed_test import BaseSpeedTest
-from backend.src.models.models import SpeedTestResult, SpeedTestTool
+from scanning.speedtests.base_speed_test import BaseSpeedTest
+from models.models import SpeedTestResult, SpeedTestTool
 from datetime import datetime
 
 

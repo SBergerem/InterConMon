@@ -1,8 +1,8 @@
-from backend.src.models.models import LatencyTestGroup
-from backend.src.database.base_repository import BaseRepository
+from models.models import LatencyTestGroup
+from database.base_repository import BaseRepository
 from sqlite3 import Cursor
 from typing import Any
-from backend.src.exceptions.exceptions import DBOperationFailedException
+from exceptions.exceptions import DBOperationFailedException
 
 
 class LatencyTestGroupRepository(BaseRepository):

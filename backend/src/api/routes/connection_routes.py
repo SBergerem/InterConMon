@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
-from backend.src.api.api_context import ApiContext
-from backend.src.database.connection_diagnosis_repository import ConnectionDiagnosisRepository
-from backend.src.models.models import ConnectionDiagnosis
+from api.api_context import ApiContext
+from database.connection_diagnosis_repository import ConnectionDiagnosisRepository
+from models.models import ConnectionDiagnosis
 from typing import Any
 
 router = APIRouter(prefix="/api/connection")

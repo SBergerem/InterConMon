@@ -1,7 +1,7 @@
 from pathlib import Path
 import sqlite3
 from sqlite3 import Cursor, Connection
-from backend.src.exceptions.exceptions import DatabaseConnectionException
+from exceptions.exceptions import DatabaseConnectionException
 from threading import Lock
 from collections.abc import Callable
 from typing import TypeVar

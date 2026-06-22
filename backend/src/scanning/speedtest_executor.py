@@ -1,9 +1,9 @@
-from backend.src.settings.app_settings import SpeedTestSettings
-from backend.src.models.models import SpeedTestResult, SpeedTestTool
-from backend.src.exceptions.exceptions import CustomException
-from backend.src.scanning.speedtests.base_speed_test import BaseSpeedTest
-from backend.src.scanning.speedtests.unknown_speed_test import UnknownSpeedTest
-from backend.src.scanning.speedtests.librespeed_speed_test import LibreSpeedSpeedTest
+from settings.app_settings import SpeedTestSettings
+from models.models import SpeedTestResult, SpeedTestTool
+from exceptions.exceptions import CustomException
+from scanning.speedtests.base_speed_test import BaseSpeedTest
+from scanning.speedtests.unknown_speed_test import UnknownSpeedTest
+from scanning.speedtests.librespeed_speed_test import LibreSpeedSpeedTest
 
 
 class SpeedTestExecutor:

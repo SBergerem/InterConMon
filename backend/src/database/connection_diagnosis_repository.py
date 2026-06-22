@@ -1,8 +1,8 @@
-from backend.src.database.base_repository import BaseRepository
+from database.base_repository import BaseRepository
 from sqlite3 import Cursor
 from typing import Any
-from backend.src.models.models import ConnectionDiagnosis
-from backend.src.exceptions.exceptions import DBOperationFailedException
+from models.models import ConnectionDiagnosis
+from exceptions.exceptions import DBOperationFailedException
 
 
 class ConnectionDiagnosisRepository(BaseRepository):

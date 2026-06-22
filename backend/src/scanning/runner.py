@@ -1,10 +1,10 @@
 import time
-from backend.src.scanning.network_checker import NetworkChecker
-from backend.src.utils.app_logger import AppLogger
-from backend.src.exceptions.exceptions import CustomException, ThreadStoppedException
-from backend.src.scanning.outage_detector import OutageDetector
+from scanning.network_checker import NetworkChecker
+from utils.app_logger import AppLogger
+from exceptions.exceptions import CustomException, ThreadStoppedException
+from scanning.outage_detector import OutageDetector
 from threading import Thread, Event
-from backend.src.models.models import (
+from models.models import (
     LatencyTest,
     LatencyTestGroup,
     LogType,
@@ -15,16 +15,16 @@ from backend.src.models.models import (
     ConnectionDiagnosis,
     NetworkDiagnosisType,
 )
-from backend.src.settings.app_settings import AppSettings, LatencyTestSettings, GatewayTestSettings, OutageCheckSettings, SpeedTestSettings
-from backend.src.database.database_manager import DatabaseManager
-from backend.src.database.latency_test_group_repository import LatencyTestGroupRepository
-from backend.src.database.latency_test_repository import LatencyTestRepository
-from backend.src.database.outage_repository import OutageRepository
-from backend.src.database.connection_diagnosis_repository import ConnectionDiagnosisRepository
-from backend.src.database.speed_test_result_repository import SpeedTestResultRepository
+from settings.app_settings import AppSettings, LatencyTestSettings, GatewayTestSettings, OutageCheckSettings, SpeedTestSettings
+from database.database_manager import DatabaseManager
+from database.latency_test_group_repository import LatencyTestGroupRepository
+from database.latency_test_repository import LatencyTestRepository
+from database.outage_repository import OutageRepository
+from database.connection_diagnosis_repository import ConnectionDiagnosisRepository
+from database.speed_test_result_repository import SpeedTestResultRepository
 from sqlite3 import Cursor
-from backend.src.scanning.connection_diagnosis_evaluator import ConnectionDiagnosisEvaluator
-from backend.src.scanning.speedtest_executor import SpeedTestExecutor
+from scanning.connection_diagnosis_evaluator import ConnectionDiagnosisEvaluator
+from scanning.speedtest_executor import SpeedTestExecutor
 
 
 class Runner:

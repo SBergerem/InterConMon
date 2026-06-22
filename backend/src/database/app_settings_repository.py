@@ -1,10 +1,10 @@
-from backend.src.database.base_repository import BaseRepository
+from database.base_repository import BaseRepository
 from sqlite3 import Cursor
 import json
 from datetime import datetime
 from typing import Any
-from backend.src.settings.app_settings import AppSettings
-from backend.src.exceptions.exceptions import DBOperationFailedException, CustomException
+from settings.app_settings import AppSettings
+from exceptions.exceptions import DBOperationFailedException, CustomException
 
 
 class AppSettingsRepository(BaseRepository):

@@ -1,8 +1,8 @@
-from backend.src.database.base_repository import BaseRepository
+from database.base_repository import BaseRepository
 from sqlite3 import Cursor
-from backend.src.models.models import SpeedTestResult
+from models.models import SpeedTestResult
 from typing import Any
-from backend.src.exceptions.exceptions import DBOperationFailedException
+from exceptions.exceptions import DBOperationFailedException
 
 
 class SpeedTestResultRepository(BaseRepository):

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
-from backend.src.api.api_context import ApiContext
-from backend.src.database.speed_test_result_repository import SpeedTestResultRepository
-from backend.src.models.models import SpeedTestResult
+from api.api_context import ApiContext
+from database.speed_test_result_repository import SpeedTestResultRepository
+from models.models import SpeedTestResult
 from typing import Any
 
 router = APIRouter(prefix="/api/speedtests")

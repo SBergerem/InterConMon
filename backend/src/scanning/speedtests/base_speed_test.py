@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
-from backend.src.models.models import SpeedTestResult, LogType
-from backend.src.settings.app_settings import SpeedTestSettings
+from models.models import SpeedTestResult, LogType
+from settings.app_settings import SpeedTestSettings
 import subprocess
-from backend.src.exceptions.exceptions import CLICommandException
-from backend.src.utils.app_logger import AppLogger
+from exceptions.exceptions import CLICommandException
+from utils.app_logger import AppLogger
 import shutil
 
 
