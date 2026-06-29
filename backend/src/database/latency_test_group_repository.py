@@ -80,3 +80,8 @@ class LatencyTestGroupRepository(BaseRepository):
 
     def load(self, statement_addition: str = "") -> list[LatencyTestGroup]:
         return self._database_manager.run_in_transaction(lambda cursor: self._load_internal(cursor, statement_addition))
+
+    def load_latest_list(self, limit: int) -> list[LatencyTestGroup]:
+        return self._database_manager.run_in_transaction(
+            lambda cursor: self._load_internal(cursor, "ORDER BY start_time DESC LIMIT ?", [limit])
+        )

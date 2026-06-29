@@ -2,8 +2,10 @@
 import { ref, onMounted } from "vue";
 
 type ApiStatusResponse = {
-  status: string;
-  app: string;
+  item: {
+    status: string;
+    app_name: string;
+  }
 };
 
 const data = ref<ApiStatusResponse | null>(null);
@@ -32,7 +34,7 @@ async function getData(url: string) {
 }
 
 onMounted(() => {
-  getData("http://127.0.0.1:8000/api/health");
+  getData("http://127.0.0.1:8000/api/health_check");
 });
 </script>
 
@@ -44,8 +46,8 @@ onMounted(() => {
   <p v-else-if="errorMessage">Error {{ errorMessage }}</p>
 
   <div v-else-if="data">
-    <p>Status: {{ data.status }}</p>
-    <p>App: {{ data.app }}</p>
+    <p>Status: {{ data.item.status }}</p>
+    <p>App: {{ data.item.app_name }}</p>
   </div>
 
   <p v-else>No data loaded</p>

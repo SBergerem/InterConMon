@@ -1,8 +1,8 @@
-from backend.src.settings.app_start_config import AppStartConfig
+from settings.app_start_config import AppStartConfig
 from pathlib import Path
 import json
-from backend.src.utils.app_logger import AppLogger
-from backend.src.models.models import LogType
+from utils.app_logger import AppLogger
+from models.models import LogType
 
 
 class AppStartConfigManager:

@@ -90,7 +90,6 @@ class LogEntryRepository(BaseRepository):
         return self._database_manager.run_in_transaction(lambda cursor: self._load_internal(cursor, statement_addition))
 
     def load_latest_list(self, limit: int, log_types: list[LogType], log_levels: list[LogLevel]) -> list[LogEntry]:
-
         statement_addition: str = f" ORDER BY date_time DESC LIMIT ?"
         where_parts: list[str] = []
         params: list[Any] = []

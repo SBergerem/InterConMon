@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-
+from fastapi.middleware.cors import CORSMiddleware
 from scanning.runner import Runner
 from settings.app_start_config_manager import AppStartConfigManager
 from settings.app_start_config import AppStartConfig
@@ -80,16 +80,24 @@ class App:
             self._app_settings,
         )
         self._api_app: FastAPI = create_app(self._api_context)
+        self._api_app.add_middleware(
+            CORSMiddleware,
+            allow_origins=self._app_start_config.api_config.cors_allowed_origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
         AppLogger.info(LogType.SYSTEM, "Initialization complete", "App", "__init__")
 
     def start(self) -> None:
         try:
             self._runner.run()
-            uvicorn.run(self._api_app, host="127.0.0.1", port=8000)
+            uvicorn.run(self._api_app, host=self._app_start_config.api_config.host, port=self._app_start_config.api_config.port)
         except Exception as ex:
             AppLogger.critical(LogType.SYSTEM, str(ex), "App", "start_app")
         finally:
             self._runner.stop()
             self._app_settings_repository.save(self._app_settings)
+            AppStartConfigManager.save_config(self._app_start_config)
             AppLogger.info(LogType.SYSTEM, "Program exited", "App", "start")

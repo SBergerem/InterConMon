@@ -1,9 +1,9 @@
 from threading import Lock
 import json
 from typing import Any
-from backend.src.exceptions.exceptions import CustomException, ValueInvalidException
-from backend.src.models.models import LogType, SpeedTestTool
-from backend.src.utils.app_logger import AppLogger
+from exceptions.exceptions import CustomException, ValueInvalidException
+from models.models import LogType, SpeedTestTool
+from utils.app_logger import AppLogger
 
 
 class LatencyTestSettings:
@@ -147,7 +147,7 @@ class SpeedTestSettings:
         with self._lock_interval_minutes:
             return self._interval_minutes
 
-    def get_run_update(self) -> bool:
+    def get_run_upload(self) -> bool:
         with self._lock_run_upload:
             return self._run_upload
 
@@ -319,7 +319,7 @@ class AppSettings:
                 ),
                 (
                     "speed_test.run_upload",
-                    {"enabled": self.get_speed_test_settings().get_run_update()},
+                    {"enabled": self.get_speed_test_settings().get_run_upload()},
                 ),
                 (
                     "speed_test.run_download",

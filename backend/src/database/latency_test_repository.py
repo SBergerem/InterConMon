@@ -83,5 +83,22 @@ class LatencyTestRepository(BaseRepository):
         latency_tests: list[LatencyTest] = self._database_manager.run_in_transaction(
             lambda cursor: self._load_internal(cursor, "WHERE group_id = ?", [latency_test_group.id])
         )
-
         latency_test_group.tests = latency_tests
+
+    def load_in_test_groups(self, latency_test_groups: list[LatencyTestGroup]) -> None:
+        group_ids: list[int] = [group.id for group in latency_test_groups]
+        placeholders: str = ",".join(["?" for _ in latency_test_groups])
+        latency_tests: list[LatencyTest] = self._database_manager.run_in_transaction(
+            lambda cursor: self._load_internal(cursor, f"WHERE group_id IN ({placeholders})", group_ids)
+        )
+
+        for group in latency_test_groups:
+            for test in latency_tests[:]:
+                if test.group_id == group.id:
+                    group.tests.append(test)
+                    latency_tests.remove(test)
+
+    def load_latest_list(self, limit: int) -> list[LatencyTest]:
+        return self._database_manager.run_in_transaction(
+            lambda cursor: self._load_internal(cursor, "ORDER BY date_time DESC LIMIT ?", [limit])
+        )

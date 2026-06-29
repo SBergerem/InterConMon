@@ -1,11 +1,12 @@
 from fastapi import APIRouter
+from api.schemas.health_schema import HealthCheckHealthResponse, HealthResponse
 
 router = APIRouter()
 
 
-@router.get("/api/health")
-def health_check() -> dict[str, str]:
-    return {
-        "status": "ok",
-        "app": "InterConMon",
-    }
+@router.get("/api/health_check", response_model=HealthCheckHealthResponse)
+def health_check() -> HealthCheckHealthResponse:
+    try:
+        return HealthCheckHealthResponse(item=HealthResponse(status=True, app_name="InterConMon"))
+    except:
+        return HealthCheckHealthResponse(item=None)
