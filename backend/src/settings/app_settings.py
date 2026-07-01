@@ -221,12 +221,12 @@ class AppSettings:
         try:
             settings: dict[str, Any] = json.loads(settings_json)
             match settings_name:
+                case "latency_test_settings.enabled":
+                    self.get_latency_test_settings().set_enabled(settings["enabled"])
                 case "latency_test_settings.targets":
                     self.get_latency_test_settings().set_targets(settings["targets"])
                 case "latency_test_settings.interval_seconds":
                     self.get_latency_test_settings().set_interval_seconds(settings["interval"])
-                case "latency_test_settings.enabled":
-                    self.get_latency_test_settings().set_enabled(settings["enabled"])
                 case "outage_check.enabled":
                     self.get_outage_check_settings().set_enabled(settings["enabled"])
                 case "outage_check.max_failed_group_test_count":

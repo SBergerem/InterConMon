@@ -1,4 +1,4 @@
-from backend.src.api.schemas.latency_test_schema import LatencyTestListResponse, LatencyTestResponse
+from api.schemas.latency_test_schema import LatencyTestListResponse, LatencyTestResponse
 from models.models import LatencyTestGroup
 from api.schemas.latency_test_group_schema import LatencyTestGroupResponse, LatencyTestGroupListResponse
 from api.mappers.latency_test_mapper import LatencyTestMapper

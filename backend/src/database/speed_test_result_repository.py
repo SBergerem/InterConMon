@@ -144,3 +144,8 @@ class SpeedTestResultRepository(BaseRepository):
             lambda cursor: self._load_internal(cursor, "ORDER BY date_time DESC LIMIT 1")
         )
         return result[0] if len(result) == 1 else None
+
+    def load_latest_list(self, limit: int) -> list[SpeedTestResult]:
+        return self._database_manager.run_in_transaction(
+            lambda cursor: self._load_internal(cursor, "ORDER BY date_time DESC LIMIT ?", [limit])
+        )

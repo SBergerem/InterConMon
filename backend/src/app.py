@@ -15,6 +15,13 @@ from database.latency_test_group_repository import LatencyTestGroupRepository
 from database.connection_diagnosis_repository import ConnectionDiagnosisRepository
 from database.log_entry_repository import LogEntryRepository
 from database.outage_repository import OutageRepository
+from api.services.latency_test_service import LatencyTestService
+from api.services.latency_test_group_service import LatencyTestGroupService
+from api.services.log_service import LogService
+from api.services.outage_service import OutageService
+from api.services.connection_diagnosis_service import ConnectionDiagnosisService
+from api.services.app_settings_service import AppSettingsService
+from api.services.speed_test_service import SpeedTestService
 from sqlite3 import Cursor
 from api.api_app import create_app
 from api.api_context import ApiContext
@@ -57,6 +64,16 @@ class App:
         self._app_settings_repository = AppSettingsRepository(self._database_manager)
         self._log_entry_repository = LogEntryRepository(self._database_manager)
 
+        self._latency_test_service: LatencyTestService = LatencyTestService(self._latency_test_repository)
+        self._latency_test_group_service: LatencyTestGroupService = LatencyTestGroupService(
+            self._latency_test_repository, self._latency_test_group_repository
+        )
+        self._outage_service: OutageService = OutageService(self._outage_repository)
+        self._connection_diagnosis_service: ConnectionDiagnosisService = ConnectionDiagnosisService(self._connection_diagnosis_repository)
+        self._speed_test_service: SpeedTestService = SpeedTestService(self._speed_test_result_repository)
+        self._app_settings_service: AppSettingsService = AppSettingsService(self._app_settings_repository)
+        self._log_service: LogService = LogService(self._log_entry_repository)
+
         self._app_settings: AppSettings = self._app_settings_repository.load()
 
         self._runner = Runner(
@@ -70,13 +87,13 @@ class App:
         )
 
         self._api_context = ApiContext(
-            self._latency_test_repository,
-            self._latency_test_group_repository,
-            self._log_entry_repository,
-            self._outage_repository,
-            self._connection_diagnosis_repository,
-            self._speed_test_result_repository,
-            self._app_settings_repository,
+            self._latency_test_service,
+            self._latency_test_group_service,
+            self._log_service,
+            self._outage_service,
+            self._connection_diagnosis_service,
+            self._speed_test_service,
+            self._app_settings_service,
             self._app_settings,
         )
         self._api_app: FastAPI = create_app(self._api_context)

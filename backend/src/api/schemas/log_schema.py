@@ -14,5 +14,5 @@ class LogResponse(BaseModel):
     details_json: str | None
 
 
-class LatestLogsResponse(BaseModel):
+class LogListResponse(BaseModel):
     items: list[LogResponse | None] | None

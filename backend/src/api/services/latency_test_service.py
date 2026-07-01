@@ -1,4 +1,4 @@
-from backend.src.models.models import LatencyTest
+from models.models import LatencyTest
 from database.latency_test_repository import LatencyTestRepository
 from api.schemas.latency_test_schema import LatencyTestListResponse
 from api.mappers.latency_test_mapper import LatencyTestMapper

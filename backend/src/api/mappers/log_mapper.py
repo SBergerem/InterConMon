@@ -1,5 +1,5 @@
 from models.models import LogEntry
-from api.schemas.log_schema import LogResponse, LatestLogsResponse
+from api.schemas.log_schema import LogResponse, LogListResponse
 
 
 class LogMapper:
@@ -23,12 +23,12 @@ class LogMapper:
             )
 
     @classmethod
-    def map_log_entries_to_response(cls, log_entries: list[LogEntry] | None) -> LatestLogsResponse:
+    def map_log_entries_to_response(cls, log_entries: list[LogEntry] | None) -> LogListResponse:
         if log_entries is None or len(log_entries) == 0:
-            return LatestLogsResponse(items=None)
+            return LogListResponse(items=None)
         else:
             responses: list[LogResponse | None] = []
             for entry in log_entries:
                 responses.append(cls.map_log_entry_to_response(entry))
 
-            return LatestLogsResponse(items=responses)
+            return LogListResponse(items=responses)
